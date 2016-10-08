@@ -13,11 +13,7 @@
             android:label = "@string/app_name"
             android:supportsRtl = "true"
             android:theme = "@style/AppTheme.NoActionBar" >
-        <activity android:name = ".extra.activity.BottomSheetActivity" >
-        </activity >
-        <activity android:name = ".activity.ScrollingActivity" >
-
-        </activity >
+        <activity android:name = ".extra.activity.BottomSheetActivity" />
         <activity android:name = ".extra.activity.TabActivity" />
         <activity android:name = ".extra.activity.CustomBehaviorActivity"
                   android:theme = "@style/AppDogTheme" />
@@ -27,6 +23,8 @@
         <activity android:name = ".extra.activity.MaterialUpConceptActivity" />
         <activity android:name = ".extra.activity.SwipeBehaviorExampleActivity" />
         <activity android:name = ".extra.activity.SimpleCoordinatorActivity" />
+        <activity android:name = ".extra.activity.TransitionOneActivity" />
+        <activity android:name = ".extra.activity.TransitionTwoActivity" />
         <activity
                 android:name = ".extra.activity.MainActivity" >
             <intent-filter >

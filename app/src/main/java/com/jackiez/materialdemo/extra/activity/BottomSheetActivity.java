@@ -8,7 +8,6 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 
 import com.jackiez.materialdemo.R;
@@ -33,7 +32,6 @@ public class BottomSheetActivity extends AppCompatActivity implements View.OnCli
 
             @Override
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-            Log.d("gtest", "top = " + mBinding.toolbar.getTop() + ", slideoffset = " + slideOffset + ", bs.top = " + bottomSheet.getTop());
                 if (slideOffset >= 0.9f) {
                     mBinding.appbar.setTranslationY(bottomSheet.getTop() - mBinding.toolbar.getHeight());
                 } else {
