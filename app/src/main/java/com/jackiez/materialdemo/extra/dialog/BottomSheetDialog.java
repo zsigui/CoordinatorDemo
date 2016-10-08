@@ -1,4 +1,4 @@
-package com.jackiez.materialdemo.extra;
+package com.jackiez.materialdemo.extra.dialog;
 
 import android.content.Context;
 import android.os.Bundle;

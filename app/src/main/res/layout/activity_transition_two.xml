@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android = "http://schemas.android.com/apk/res/android"
+        xmlns:app = "http://schemas.android.com/apk/res-auto" >
+
+    <android.support.design.widget.CoordinatorLayout
+            android:id = "@+id/cl_container"
+            android:layout_width = "match_parent"
+            android:layout_height = "match_parent" >
+
+        <android.support.design.widget.AppBarLayout
+                android:id = "@+id/abl_conatiner"
+                android:layout_width = "match_parent"
+                android:layout_height = "350dp"
+                app:elevation = "4dp" >
+
+            <android.support.design.widget.CollapsingToolbarLayout
+                    android:id = "@+id/ctl_container"
+                    android:layout_width = "match_parent"
+                    android:layout_height = "match_parent"
+                    app:expandedTitleMarginBottom = "94dp"
+                    app:expandedTitleTextAppearance = "@style/CollapsingTextAppearance.Inverse"
+                    app:contentScrim = "@android:color/transparent"
+                    app:layout_scrollFlags = "scroll|exitUntilCollapsed|snap" >
+
+                <ImageView
+                        android:id = "@+id/iv_title"
+                        android:layout_width = "match_parent"
+                        android:layout_height = "match_parent"
+                        android:scaleType = "centerCrop"
+                        android:src = "@drawable/london_flat" />
+
+                <android.support.v7.widget.Toolbar
+                        android:id = "@+id/toolbar"
+                        android:layout_width = "match_parent"
+                        android:layout_height = "?attr/actionBarSize" >
+
+                </android.support.v7.widget.Toolbar >
+            </android.support.design.widget.CollapsingToolbarLayout >
+        </android.support.design.widget.AppBarLayout >
+
+        <android.support.v4.widget.NestedScrollView
+                android:id = "@+id/nsv_container"
+                android:layout_width = "match_parent"
+                android:layout_height = "match_parent"
+                android:scrollbars = "none"
+                app:behavior_overlapTop = "78dp"
+                app:layout_behavior = "@string/appbar_scrolling_view_behavior" >
+
+            <LinearLayout
+                    android:layout_width = "match_parent"
+                    android:layout_height = "wrap_content"
+                    android:orientation = "vertical"
+                    >
+
+                <android.support.v7.widget.CardView
+                        android:id = "@+id/cv_card"
+                        android:layout_width = "match_parent"
+                        android:layout_height = "wrap_content"
+                        app:contentPaddingBottom = "16dp"
+                        app:contentPaddingLeft = "16dp"
+                        app:contentPaddingRight = "16dp"
+                        app:cardCornerRadius = "4dp"
+                        app:cardBackgroundColor = "@android:color/white"
+                        app:cardElevation = "4dp"
+                        android:layout_margin = "8dp"
+                        >
+
+                    <LinearLayout
+                            android:layout_width = "match_parent"
+                            android:layout_height = "wrap_content"
+                            android:orientation = "vertical"
+                            >
+
+                        <TextView
+                                android:layout_width = "match_parent"
+                                android:layout_height = "wrap_content"
+                                android:text = "@string/text_header"
+                                android:textAppearance = "@style/TextAppearance.Header"
+                                style = "@style/TextComponent.ItemRow"
+                                />
+
+                        <TextView
+                                android:layout_width = "match_parent"
+                                android:layout_height = "wrap_content"
+                                android:fontFamily = "sans-serif-light"
+                                android:lineSpacingExtra = "8dp"
+                                android:textSize = "16sp"
+                                android:text = "@string/lorem"
+                                />
+                    </LinearLayout >
+                </android.support.v7.widget.CardView >
+            </LinearLayout >
+        </android.support.v4.widget.NestedScrollView >
+    </android.support.design.widget.CoordinatorLayout >
+
+</layout >

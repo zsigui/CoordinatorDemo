@@ -56,7 +56,7 @@
                     <TextView
                             android:layout_width = "match_parent"
                             android:layout_height = "wrap_content"
-                            android:text = "@string/header_examples"
+                            android:text = "Coordinator Example"
                             android:textAppearance = "@style/TextAppearance.Header"
                             android:paddingRight = "8dp"
                             android:paddingLeft = "8dp"
@@ -67,7 +67,7 @@
                             android:id = "@+id/main.coordinator.tablayout"
                             android:layout_width = "match_parent"
                             android:layout_height = "wrap_content"
-                            android:text = "simple TabLayout example"
+                            android:text = "Simple TabLayout example"
                             android:textAppearance = "@style/TextAppearance.ItemExample"
                             android:drawableRight = "@drawable/ic_arrow_forward_24dp"
                             style = "@style/TextComponent.ItemRow.Selectable"
@@ -145,6 +145,41 @@
                             android:layout_width = "match_parent"
                             android:layout_height = "wrap_content"
                             android:text = "Custom Behavior example"
+                            android:textAppearance = "@style/TextAppearance.ItemExample"
+                            android:drawableRight = "@drawable/ic_arrow_forward_24dp"
+                            style = "@style/TextComponent.ItemRow.Selectable"
+                            />
+                </LinearLayout >
+            </android.support.v7.widget.CardView >
+
+            <android.support.v7.widget.CardView
+                    android:layout_gravity = "center"
+                    android:layout_width = "match_parent"
+                    android:layout_height = "wrap_content"
+                    android:layout_margin = "8dp"
+                    >
+
+                <LinearLayout
+                        android:layout_width = "match_parent"
+                        android:layout_height = "wrap_content"
+                        android:orientation = "vertical"
+                        tools:ignore = "RtlHardcoded"
+                        >
+
+                    <TextView
+                            android:layout_width = "match_parent"
+                            android:layout_height = "wrap_content"
+                            android:text = "Transition Example"
+                            android:textAppearance = "@style/TextAppearance.Header"
+                            android:paddingRight = "8dp"
+                            android:paddingLeft = "8dp"
+                            style = "@style/TextComponent.ItemRow"
+                            />
+                    <TextView
+                            android:id = "@+id/main.transition.shareelement"
+                            android:layout_width = "match_parent"
+                            android:layout_height = "wrap_content"
+                            android:text = "Share Element Transition example"
                             android:textAppearance = "@style/TextAppearance.ItemExample"
                             android:drawableRight = "@drawable/ic_arrow_forward_24dp"
                             style = "@style/TextComponent.ItemRow.Selectable"
