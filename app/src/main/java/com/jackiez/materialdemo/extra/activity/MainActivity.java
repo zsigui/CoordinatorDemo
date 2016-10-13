@@ -45,6 +45,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.main_materialup_bottomsheetbehavior).setOnClickListener(this);
         findViewById(R.id.main_materialup_bottomsheetdialog).setOnClickListener(this);
         findViewById(R.id.main_transition_shareelement).setOnClickListener(this);
+        findViewById(R.id.main_fragment_shareelement).setOnClickListener(this);
+        findViewById(R.id.main_animation_scene).setOnClickListener(this);
     }
 
     @Override
@@ -88,6 +90,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.main_transition_shareelement:
                 TransitionOneActivity.start(this);
+                break;
+            case R.id.main_fragment_shareelement:
+                ShareFragmentActivity.start(this);
+                break;
+            case R.id.main_animation_scene:
+                AnimationActivity.start(this);
                 break;
         }
     }

@@ -43,20 +43,20 @@
 			android:elevation="8dp"
 			app:border_width="2dp"
 			app:border_color="#FFF"
-			app:layout_scrollFlags="scroll"
+			app:layout_scrollFlags="scroll|snap"
 			/>
 		​
-		<android.support.v7.widget.Toolbar
-			android:id="@+id/materialup.toolbar"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:minHeight="?attr/actionBarSize"
-			android:background="?colorPrimary"
-			android:layout_marginTop="-48dp"
-			app:theme="@style/ThemeOverlay.AppCompat.Light"
-			app:layout_scrollFlags="scroll|enterAlways|snap"
-			style="@style/ToolBarWithNavigationBack"
-			/>
+		<!--<android.support.v7.widget.Toolbar-->
+			<!--android:id="@+id/materialup.toolbar"-->
+			<!--android:layout_width="match_parent"-->
+			<!--android:layout_height="wrap_content"-->
+			<!--android:minHeight="?attr/actionBarSize"-->
+			<!--android:background="?colorPrimary"-->
+			<!--android:layout_marginTop="-48dp"-->
+			<!--app:theme="@style/ThemeOverlay.AppCompat.Light"-->
+			<!--app:layout_scrollFlags="scroll|enterAlways|snap"-->
+			<!--style="@style/ToolBarWithNavigationBack"-->
+			<!--/>-->
 		​
 		<LinearLayout
 			android:id="@+id/materialup.title_container"
@@ -64,7 +64,7 @@
 			android:layout_height="wrap_content"
 			android:orientation="vertical"
 			android:gravity="center"
-			app:layout_scrollFlags="scroll|enterAlways|snap"
+			app:layout_scrollFlags="scroll|snap"
 			>
 			​
 			<TextView

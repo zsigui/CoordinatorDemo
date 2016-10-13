@@ -46,8 +46,8 @@ public class TransitionTwoActivity extends AppCompatActivity implements View.OnC
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        makeTheStatusbarTranslucent(this);
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_transition_two);
+        makeTheStatusbarTranslucent(this);
         setSupportActionBar(mBinding.toolbar);
         if (getIntent() != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             int pos = getIntent().getIntExtra(TransitionOneActivity.EXTRA_POS_KEY,  -1);

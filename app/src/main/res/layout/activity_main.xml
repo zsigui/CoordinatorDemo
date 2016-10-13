@@ -179,7 +179,25 @@
                             android:id = "@+id/main.transition.shareelement"
                             android:layout_width = "match_parent"
                             android:layout_height = "wrap_content"
-                            android:text = "Share Element Transition example"
+                            android:text = "Share Element Activity example"
+                            android:textAppearance = "@style/TextAppearance.ItemExample"
+                            android:drawableRight = "@drawable/ic_arrow_forward_24dp"
+                            style = "@style/TextComponent.ItemRow.Selectable"
+                            />
+                    <TextView
+                            android:id = "@+id/main.fragment.shareelement"
+                            android:layout_width = "match_parent"
+                            android:layout_height = "wrap_content"
+                            android:text = "Share Element Fragment example"
+                            android:textAppearance = "@style/TextAppearance.ItemExample"
+                            android:drawableRight = "@drawable/ic_arrow_forward_24dp"
+                            style = "@style/TextComponent.ItemRow.Selectable"
+                            />
+                    <TextView
+                            android:id = "@+id/main.animation.scene"
+                            android:layout_width = "match_parent"
+                            android:layout_height = "wrap_content"
+                            android:text = "Scene Animation example"
                             android:textAppearance = "@style/TextAppearance.ItemExample"
                             android:drawableRight = "@drawable/ic_arrow_forward_24dp"
                             style = "@style/TextComponent.ItemRow.Selectable"

@@ -5,4 +5,19 @@
         <item name="windowNoTitle">true</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
     </style>
+
+    <style name="MaterialAnimations" parent="AppTheme.NoActionBar">
+        <item name="android:windowContentTransitions">true</item>
+    </style>
+
+    <style name="MaterialAnimations.Icon">
+        <item name="android:layout_margin">10dp</item>
+    </style>
+
+    <style name="MaterialAnimations.Icon.Big">
+        <item name="android:layout_width">150dp</item>
+        <item name="android:layout_height">150dp</item>
+    </style>
+
+
 </resources>

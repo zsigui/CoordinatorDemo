@@ -10,12 +10,11 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.widget.ImageView;
 
 import com.jackiez.materialdemo.R;
 import com.jackiez.materialdemo.extra.fragment.MaterialUpConceptFakePage;
+import com.jackiez.materialdemo.extra.fragment.ShareOne2Fragment;
 
 public class MaterialUpConceptActivity extends AppCompatActivity
 	implements AppBarLayout.OnOffsetChangedListener {
@@ -36,12 +35,12 @@ public class MaterialUpConceptActivity extends AppCompatActivity
 		AppBarLayout appbarLayout = (AppBarLayout) findViewById(R.id.materialup_appbar);
 		mProfileImage = (ImageView) findViewById(R.id.materialup_profile_image);
 
-		Toolbar toolbar = (Toolbar) findViewById(R.id.materialup_toolbar);
-		toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-			@Override public void onClick(View v) {
-				onBackPressed();
-			}
-		});
+//		Toolbar toolbar = (Toolbar) findViewById(R.id.materialup_toolbar);
+//		toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+//			@Override public void onClick(View v) {
+//				onBackPressed();
+//			}
+//		});
 
 		appbarLayout.addOnOffsetChangedListener(this);
 		mMaxScrollSize = appbarLayout.getTotalScrollRange();
@@ -89,7 +88,7 @@ public class MaterialUpConceptActivity extends AppCompatActivity
 		public Fragment getItem(int i) {
 			switch(i) {
 				case 0: return MaterialUpConceptFakePage.newInstance();
-				case 1: return MaterialUpConceptFakePage.newInstance();
+				case 1: return ShareOne2Fragment.newInstance();
 			}
 			return null;
 		}

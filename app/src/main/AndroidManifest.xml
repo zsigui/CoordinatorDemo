@@ -25,6 +25,10 @@
         <activity android:name = ".extra.activity.SimpleCoordinatorActivity" />
         <activity android:name = ".extra.activity.TransitionOneActivity" />
         <activity android:name = ".extra.activity.TransitionTwoActivity" />
+        <activity android:name = ".extra.activity.ShareFragmentActivity"
+                android:theme="@style/MaterialAnimations"/>
+        <activity android:name = ".extra.activity.AnimationActivity"
+                  android:theme="@style/MaterialAnimations"/>
         <activity
                 android:name = ".extra.activity.MainActivity" >
             <intent-filter >
