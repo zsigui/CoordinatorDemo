@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.main_transition_shareelement).setOnClickListener(this);
         findViewById(R.id.main_fragment_shareelement).setOnClickListener(this);
         findViewById(R.id.main_animation_scene).setOnClickListener(this);
+        findViewById(R.id.main_test).setOnClickListener(this);
     }
 
     @Override
@@ -96,6 +97,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.main_animation_scene:
                 AnimationActivity.start(this);
+                break;
+            case R.id.main_test:
+                GridActivityTest.start(this);
                 break;
         }
     }
