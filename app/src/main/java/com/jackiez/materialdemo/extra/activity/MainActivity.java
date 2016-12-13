@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 AnimationActivity.start(this);
                 break;
             case R.id.main_test:
-                GridActivityTest.start(this);
+                CustomViewActivity.start(this);
                 break;
         }
     }
