@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Build;
+import android.support.annotation.ColorRes;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -63,6 +64,14 @@ public class UIUtil {
             return color + 0x1A000000;
         } else {
             return color | 0xFF000000;
+        }
+    }
+
+    public static int getColor(Context context, @ColorRes int color) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return context.getResources().getColor(color, null);
+        } else {
+            return context.getResources().getColor(color);
         }
     }
 }

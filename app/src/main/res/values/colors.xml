@@ -12,4 +12,11 @@
     <color name="sample_blue">#33b5e5</color>
     <color name="sample_green">#669900</color>
     <color name="sample_yellow">#ff8800</color>
+
+
+    <!-- Date -->
+    <color name = "co_dateview_text">#7d5942</color>
+    <color name = "co_dateview_week_bg">#997048</color>
+    <color name = "co_dateview_date_bg">#a97c50</color>
+    <!-- -->
 </resources>

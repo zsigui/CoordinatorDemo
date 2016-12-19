@@ -2,12 +2,16 @@ package com.jackiez.materialdemo.extra.widget;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.text.TextPaint;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+
+import com.jackiez.materialdemo.extra.utils.DensityUtil;
 
 import java.util.Calendar;
 
@@ -18,11 +22,12 @@ import java.util.Calendar;
 public class MonthDateView extends View {
 
     private static final int NO_INDEX = -1;
-    private static final int DOUBLE_TAP_TIME_SLOP = 100;
-    private static final int LONG_TAP_TIME_SLOP = 1000;
+    private static final int DOUBLE_TAP_TIME_SLOP = 200;
+    private static final int LONG_TAP_TIME_SLOP = 750;
 //    private static final int TAP_DISTANCE_SLOP = 100;
 //    private float downX;
 //    private float downY;
+    private boolean isJudgeDoubleTap = false;
     private int lastTouchItemIndex;
     private int lastTouchItemIndexForTap;
     private long lastTouchFromNowInMill;
@@ -38,48 +43,32 @@ public class MonthDateView extends View {
 
     private final String[] DATE_POS = {"日", "一", "二", "三", "四", "五", "六"};
 
+
+    private boolean isInitValFirst = false;
     private int dateStart;
     private int dateEnd;
-
-    private int btnStartX;
-    private int btnStartY;
-    private int btnEndX;
-    private int btnEndY;
+    protected int dateInToday;
     private onItemTapListener mItemTapListener;
 
 
-    private int cellWidth;
-    private int cellHeight;
-    private int dateTextSize;
-    private int weekendTextSize;
-    private int weekendHeight;
-    private int dateBgWidth;
-    private int dateBgHeight;
+    protected int cellWidth;
+    protected int cellHeight;
+    protected int dateTextSize;
+    protected int weekendTextSize;
+    protected int weekendHeight;
+    protected int dateBgWidth;
+    protected int dateBgHeight;
 
-    private int datePaddingTop;
-    private int datePaddingBottom;
-    private int datePaddingLeft;
-    private int datePaddingRight;
+    protected int datePaddingTop;
+    protected int datePaddingBottom;
+    protected int datePaddingLeft;
+    protected int datePaddingRight;
 
 
-    private Paint weekendBgPaint;
-    private Paint dateBgPaint;
-    private TextPaint mWeekendTextPaint;
-    private TextPaint mDateTextPaint;
-    private Paint decorationBgPaint;
-
-    private int decorationState;
-
-    public final static class DECORATION_STATE {
-        private DECORATION_STATE() {
-        }
-
-        public static final int NONE = 0;
-
-        public static final int CHECKED = 1;
-
-        public static final int DISABLED = 2;
-    }
+    protected Paint weekendBgPaint;
+    protected Paint dateBgPaint;
+    protected TextPaint weekendTextPaint;
+    protected TextPaint dateTextPaint;
 
     public MonthDateView(Context context) {
         this(context, null);
@@ -91,34 +80,73 @@ public class MonthDateView extends View {
 
     public MonthDateView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        initVal();
+        calculateTime();
+        initPaint();
     }
 
-    private void initVal() {
-        mDateTextPaint = new TextPaint();
-        mDateTextPaint.setTextSize(dateTextSize);
-        mDateTextPaint.setAntiAlias(false);
-        mDateTextPaint.setStyle(Paint.Style.FILL);
-        mWeekendTextPaint = new TextPaint();
-        mWeekendTextPaint.setTextSize(dateTextSize);
-        mWeekendTextPaint.setAntiAlias(false);
-        mWeekendTextPaint.setStyle(Paint.Style.FILL);
+    public void setItemTapListener(onItemTapListener itemTapListener) {
+        mItemTapListener = itemTapListener;
     }
 
-//    public void setSidePadding(int sidePadding) {
-//        this.sidePadding = sidePadding;
-//        this.isAutoSidePadding = false;
-//        postInvalidate();
-//    }
+    private void initPaint() {
+        if (dateTextPaint == null) {
+            dateTextPaint = new TextPaint();
+            dateTextPaint.setTextSize(dateTextSize);
+            dateTextPaint.setAntiAlias(true);
+            dateTextPaint.setStyle(Paint.Style.FILL);
+            dateTextPaint.setColor(Color.GRAY);
+        }
+        if (weekendTextPaint == null) {
+            weekendTextPaint = new TextPaint();
+            weekendTextPaint.setTextSize(weekendTextSize);
+            weekendTextPaint.setAntiAlias(true);
+            weekendTextPaint.setStyle(Paint.Style.FILL);
+            weekendTextPaint.setColor(Color.RED);
+        }
+        if (weekendBgPaint == null) {
+            weekendBgPaint = new TextPaint();
+            weekendBgPaint.setAntiAlias(true);
+            weekendBgPaint.setStyle(Paint.Style.FILL);
+            weekendBgPaint.setColor(Color.DKGRAY);
+        }
+        if (dateBgPaint == null) {
+            dateBgPaint = new TextPaint();
+            dateBgPaint.setAntiAlias(true);
+            dateBgPaint.setColor(Color.WHITE);
+            dateBgPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+        }
+    }
 
+    public void setWeekendBgColor(int color) {
+        weekendBgPaint.setColor(color);
+        postInvalidate();
+    }
 
-    public void cacluteTime() {
+    public void setWeekendText(int color, int sizeInPx) {
+        weekendTextPaint.setColor(color);
+        weekendTextPaint.setTextSize(sizeInPx);
+        postInvalidate();
+    }
+
+    public void setDateText(int color, int sizeInPx) {
+        dateTextPaint.setColor(color);
+        dateTextPaint.setTextSize(sizeInPx);
+        postInvalidate();
+    }
+
+    public void setDateBgColor(int color) {
+        dateBgPaint.setColor(color);
+        postInvalidate();
+    }
+
+    public void calculateTime() {
         int year, month, day, dayCount;
         Calendar calendar = Calendar.getInstance();
         year = calendar.get(Calendar.YEAR);
         month = calendar.get(Calendar.MONTH);
-        day = calendar.get(Calendar.DAY_OF_MONTH) - 1;
-        dateStart = calendar.getFirstDayOfWeek();
+        dateInToday = calendar.get(Calendar.DAY_OF_MONTH) - 1;
+        dateStart = 4;
+        dateEnd = 34;
         calendar.set(Calendar.DATE, 1);
         calendar.roll(Calendar.DATE, false);
         dayCount = calendar.get(Calendar.DATE);
@@ -127,23 +155,27 @@ public class MonthDateView extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        if (getMeasuredWidth() != 0) {
-//            float weekendTextWidth = mWeekendTextPaint.measureText("25");
-//            if (isAutoSidePadding) {
-//                this.sidePadding = (int) ((width - weekendTextWidth * 7 ) / 8 / 2);
-//                this.cellHeight = this.cellWidth = (int) (weekendTextWidth + 2 * this.sidePadding);
-//            } else {
-//                this.cellWidth = this.cellHeight =  width - 2 * this.sidePadding / 7;
-//            }
-            this.dateBgWidth = getMeasuredWidth();
+        if (getMeasuredWidth() != 0 && !isInitValFirst) {
+            this.dateBgWidth = (dateBgWidth == 0 ? getMeasuredWidth() : dateBgWidth);
             this.cellWidth = (this.dateBgWidth - this.datePaddingLeft - this.datePaddingRight) / 7;
             if (this.dateBgHeight == 0) {
-                this.cellHeight = this.cellWidth;
-                this.dateBgHeight = this.cellHeight * 5 + this.datePaddingTop + this.datePaddingBottom;
+                this.cellHeight = (this.cellHeight == 0 ? this.cellWidth : this.cellHeight);
+                this.dateBgHeight = (this.cellHeight * 5 + this.datePaddingTop + this.datePaddingBottom);
             } else {
                 this.cellHeight = (this.dateBgHeight - this.datePaddingTop - this.datePaddingBottom) / 5;
             }
-
+            this.dateTextSize = (dateTextSize == 0 ? DensityUtil.dp2px(getContext(), 14) : dateTextSize);
+            this.weekendTextSize = (weekendTextSize == 0 ? DensityUtil.dp2px(getContext(), 14) : weekendTextSize);
+            this.weekendHeight = (this.weekendHeight == 0 ?
+                    this.weekendTextSize + 2 * DensityUtil.dp2px(getContext(), 8) : this.weekendHeight);
+            dateTextPaint.setTextSize(dateTextSize);
+            weekendTextPaint.setTextSize(weekendTextSize);
+            isInitValFirst = true;
+        }
+        if (((getMeasuredWidth() != dateBgWidth) || getMeasuredHeight() != (dateBgHeight + weekendHeight))
+                && (dateBgWidth != 0 && (dateBgHeight + weekendHeight != 0))) {
+            setMeasuredDimension(this.dateBgWidth, this.dateBgHeight + weekendHeight);
+            Log.d("test", "width = " + this.dateBgWidth + ", height = " + dateBgHeight + ", cw = " + cellWidth + ", ch = " + cellHeight);
         }
     }
 
@@ -151,7 +183,7 @@ public class MonthDateView extends View {
     public boolean onTouchEvent(MotionEvent event) {
         float x = event.getX();
         float y = event.getY();
-        int column, row, left, top, right, bottom;
+        int column, row, left, top, right, bottom, num;
         long curTimeInMill;
         boolean hasItemTouch = false;
         for (int i = 0; i < 35; i++) {
@@ -160,6 +192,7 @@ public class MonthDateView extends View {
             }
             column = i % 7;
             row = i / 7;
+            num = i - dateStart + 1;
             left = datePaddingLeft + column * cellWidth;
             top = weekendHeight + datePaddingTop + row * cellHeight;
             right = left + cellWidth;
@@ -176,13 +209,24 @@ public class MonthDateView extends View {
                         lastTouchTimeInMill = curTimeInMill;
                         if (lastTouchItemIndexForTap == i
                                 && lastTouchFromNowInMill < DOUBLE_TAP_TIME_SLOP) {
-                            // 判断为双击事件,移除之前判断的单击事件
+                            // 判断为双击事件,移除之前判断的单击事件,双击事件必要也可以在此处判断
+                            isJudgeDoubleTap = true;
                             removeCallbacks(oneTapDelayRunnable);
                         }
 //                        downX = event.getX();
 //                        downY = event.getY();
                         break;
                     case MotionEvent.ACTION_MOVE:
+                        // 如果已经判断为双击,则不响应长按事件
+                        if (!isJudgeDoubleTap && lastTouchItemIndex != NO_INDEX
+                                && System.currentTimeMillis() - lastTouchTimeInMill > LONG_TAP_TIME_SLOP) {
+                            // 长按事件处理
+                            if (mItemTapListener != null) {
+                                mItemTapListener.onItemLongTap(num);
+                            }
+                            lastTouchItemIndex = NO_INDEX;
+                            lastTouchItemIndexForTap = NO_INDEX;
+                        }
                         if (lastTouchItemIndex != NO_INDEX
                                 && lastTouchItemIndex != i) {
                             // 滑动移除位置,不进行点击时间判断
@@ -192,27 +236,20 @@ public class MonthDateView extends View {
                         break;
                     case MotionEvent.ACTION_CANCEL:
                     case MotionEvent.ACTION_UP:
+//                        if (lastTouchItemIndex != NO_INDEX && Math.abs(x - downX) < TAP_DISTANCE_SLOP
+//                                && Math.abs(y - downY) < TAP_DISTANCE_SLOP) {
                         if (lastTouchItemIndex != NO_INDEX) {
-//                          if (lastTouchItemIndex != NO_INDEX && Math.abs(x - downX) < TAP_DISTANCE_SLOP
-//                                    && Math.abs(y - downY) < TAP_DISTANCE_SLOP) {
                             curTimeInMill = System.currentTimeMillis();
-                            if (lastTouchItemIndexForTap == i
-                                    && lastTouchFromNowInMill < DOUBLE_TAP_TIME_SLOP) {
+                            if (isJudgeDoubleTap) {
                                 // 双击事件处理
                                 if (mItemTapListener != null) {
-                                    mItemTapListener.onItemDoubleTap(i);
-                                }
-                                lastTouchItemIndexForTap = NO_INDEX;
-                            } else if (curTimeInMill - lastTouchTimeInMill > LONG_TAP_TIME_SLOP) {
-                                // 长按事件处理
-                                if (mItemTapListener != null) {
-                                    mItemTapListener.onItemLongTap(i);
+                                    mItemTapListener.onItemDoubleTap(num);
                                 }
                                 lastTouchItemIndexForTap = NO_INDEX;
                             } else {
                                 // 单击事件处理
                                 // 由于处理双击冲突,单击事件需要延迟进行判断,延迟间隔为双击间隔的判断时间
-                                final int oneTapItemIndex = i;
+                                final int oneTapItemIndex = num;
                                 oneTapDelayRunnable = new Runnable() {
                                     @Override
                                     public void run() {
@@ -229,6 +266,7 @@ public class MonthDateView extends View {
                             lastTouchFromNowInMill = curTimeInMill;
                             lastTouchItemIndex = NO_INDEX;
                         }
+                        isJudgeDoubleTap = false;
                         break;
                 }
                 // 已经找到处理的项,跳出循环
@@ -237,6 +275,8 @@ public class MonthDateView extends View {
         }
         if (!hasItemTouch) {
             lastTouchItemIndexForTap = NO_INDEX;
+        } else {
+            return true;
         }
         return super.onTouchEvent(event);
     }
@@ -244,7 +284,6 @@ public class MonthDateView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-
         // 绘制日期表的背景
         drawBg(canvas);
 
@@ -277,54 +316,49 @@ public class MonthDateView extends View {
                 num = i - dateStart + 1;
             }
             drawDateText(canvas, num, x, y, cellWidth, cellHeight);
-            drawDecoration(canvas, num, x, y, cellWidth, cellHeight, decorationState);
+            drawDecoration(canvas, num, x, y, cellWidth, cellHeight);
         }
-
     }
 
-    private void drawBg(Canvas canvas) {
+    protected void drawBg(Canvas canvas) {
         RectF rectF = new RectF(0, 0, dateBgWidth, weekendHeight);
         canvas.drawRect(rectF, weekendBgPaint);
-        rectF = new RectF(0, dateBgHeight, dateBgWidth, weekendHeight + dateBgHeight);
+        rectF = new RectF(0, weekendHeight, dateBgWidth, weekendHeight + dateBgHeight);
         canvas.drawRect(rectF, dateBgPaint);
     }
 
-    private void drawWeekendText(Canvas canvas, int num,
+    protected void drawWeekendText(Canvas canvas, int num,
                                  int x, int y,
                                  int width, int height) {
-        Paint.FontMetrics fm = mWeekendTextPaint.getFontMetrics();
-        float textWidth = mWeekendTextPaint.measureText(DATE_POS[num]);
+        Paint.FontMetrics fm = weekendTextPaint.getFontMetrics();
+        float textWidth = weekendTextPaint.measureText(DATE_POS[num]);
         float textHeight = fm.ascent + fm.leading + fm.descent;
         canvas.drawText(DATE_POS[num],
                 x + (width - textWidth) / 2,
                 y + (height - textHeight) / 2,
-                mWeekendTextPaint);
+                weekendTextPaint);
     }
 
-    private void drawDateText(Canvas canvas, int num,
+    protected void drawDateText(Canvas canvas, int num,
                               int x, int y,
                               int width, int height) {
+        if (num < 0) {
+            return;
+        }
         String s = String.valueOf(num);
-        Paint.FontMetricsInt fm = mDateTextPaint.getFontMetricsInt();
-        float textWidth = mDateTextPaint.measureText(s);
+        Paint.FontMetricsInt fm = dateTextPaint.getFontMetricsInt();
+        float textWidth = dateTextPaint.measureText(s);
         float textHeight = fm.ascent + fm.leading + fm.descent;
         canvas.drawText(s,
                 x + (width - textWidth) / 2,
                 y + (height - textHeight) / 2,
-                mDateTextPaint);
+                dateTextPaint);
     }
 
-    private void drawDecoration(Canvas canvas, int num,
+    protected void drawDecoration(Canvas canvas, int num,
                                 int x, int y,
-                                int width, int height, int state) {
-        switch (state) {
-            case DECORATION_STATE.CHECKED:
-                break;
-            case DECORATION_STATE.DISABLED:
-                break;
-            case DECORATION_STATE.NONE:
-            default:
-        }
+                                int width, int height) {
+        // 重写该方法写装饰
     }
 
 
