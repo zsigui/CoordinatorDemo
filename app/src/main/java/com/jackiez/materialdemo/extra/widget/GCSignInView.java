@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -12,6 +13,14 @@ import android.widget.TextView;
  */
 
 public class GCSignInView extends ScrollView {
+
+    private int totalHeight = 2300;
+    private int ruleBgHeight = 245;
+
+    private int btnSignInWidth = 324;
+    private int titleSize = 16;
+    private int textSize = 13;
+    private float titlePadding = 5;
 
     private ImageView ivIcon;
     private TextView tvName;
@@ -25,6 +34,7 @@ public class GCSignInView extends ScrollView {
 
     public GCSignInView(Context context) {
         this(context, null);
+        ListView lv;
     }
 
     public GCSignInView(Context context, AttributeSet attrs) {
@@ -36,4 +46,9 @@ public class GCSignInView extends ScrollView {
     }
 
 
+    @Override
+    protected void onFinishInflate() {
+        super.onFinishInflate();
+    }
 }
+

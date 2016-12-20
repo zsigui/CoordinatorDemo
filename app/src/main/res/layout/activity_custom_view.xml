@@ -7,8 +7,7 @@
             android:id = "@+id/ll_background"
             android:orientation = "vertical"
             android:layout_width = "match_parent"
-            android:layout_height = "wrap_content"
-            android:background = "@color/co_dateview_date_bg" >
+            android:layout_height = "wrap_content">
 
 
         <ImageView
@@ -25,6 +24,20 @@
                 android:layout_height = "wrap_content"
                 android:layout_below = "@+id/iv_top" />
 
+
+        <View
+                android:id="@+id/v_mid_bg"
+                android:layout_width = "match_parent"
+                android:layout_height = "800dp"
+                android:layout_below = "@+id/mdv_content"
+                android:background = "@color/co_dateview_date_bg" />
+
+        <View
+                android:layout_below="@+id/v_mid_bg"
+                android:layout_width = "match_parent"
+                android:layout_height = "300dp"
+                android:background="@color/co_dateview_week_bg"/>
+
         <Button
                 android:id = "@+id/btn_signin"
                 android:layout_width = "wrap_content"
@@ -32,5 +45,7 @@
                 android:layout_below = "@+id/mdv_content"
                 android:layout_centerHorizontal = "true"
                 android:background = "@drawable/selector_btn_signin" />
+
+
     </RelativeLayout >
 </ScrollView >

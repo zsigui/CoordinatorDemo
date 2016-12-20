@@ -155,7 +155,16 @@ public class CircularView extends LinearLayout {
             case MotionEvent.ACTION_MOVE:
                 initVelocityTrackerIfNeeded();
                 mTracker.addMovement(event);
+                Log.d("TEST", "show content");
                 scrollBy(0, (int) (event.getY() - lastY));
+                lastY = event.getY();
+                int diffY = (int) (lastY - downY);
+                if (diffY > 0) {
+                    // 下滑
+
+                } else {
+                    // 上滑
+                }
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
