@@ -7,7 +7,8 @@ import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.LinearLayout;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.jackiez.materialdemo.R;
@@ -18,7 +19,20 @@ import java.util.ArrayList;
  * Created by zsigui on 16-12-20.
  */
 
-public class TestScrollView extends LinearLayout {
+public class TestScrollView extends ViewGroup {
+
+    // 指示当前
+    private int totalDistanceY = 0;
+    // 指示总的高度
+    private int totalHeight = Integer.MAX_VALUE;
+    private int viewHeight;
+    private int topOffset = 0;
+
+    private int firstPos = -1;
+    private int lastPos = 0;
+
+    private BaseAdapter mAdapter;
+
     public TestScrollView(Context context) {
         super(context);
     }
@@ -30,9 +44,111 @@ public class TestScrollView extends LinearLayout {
     public TestScrollView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
+
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        super.onLayout(changed, l, t, r, b);
+        if (itemCount == 0) {
+            return;
+        }
+        // 保证滑动到顶端不再滑动
+        if (totalDistanceY <= 0) {
+            totalDistanceY = 0;
+        }
+        if (totalDistanceY >= totalHeight) {
+            totalDistanceY = totalHeight;
+        }
+
+        int moveDistanceY = 0;
+
+        int realDistanceY = 0;
+        if (moveDistanceY > topOffset + totalDistanceY) {
+            // 移动到开始
+            realDistanceY = topOffset + totalDistanceY;
+        } else if (moveDistanceY > topOffset) {
+            realDistanceY = moveDistanceY;
+        } else {
+            realDistanceY = 0;
+        }
+        removeUnVisibleView();
+        addChildViewAbove(realDistanceY);
+        addChildViewBelow();
+        layoutChildView();
+    }
+
+    private void layoutChildView() {
+        if (getChildCount() == 0) {
+            return;
+        }
+
+        int startTop = 0;
+        View child;
+        for (int i = 0; i < getChildCount(); i++) {
+            child = getChildAt(i);
+            child.layout(0, startTop, child.getMeasuredWidth(), startTop + child.getMeasuredHeight());
+            startTop += child.getMeasuredHeight();
+        }
+    }
+
+    private void addChildViewBelow() {
+        if (lastPos >= getChildCount()) {
+            return;
+        }
+        View child = getChildAt(getChildCount() - 1);
+    }
+
+    private void addChildViewAbove(int distanceY) {
+        if (itemCount == 0) {
+            return;
+        }
+        while (firstPos >= 0
+                && distanceY > 0 ) {
+            View child = mAdapter.getView(firstPos, null, this);
+            child = measureChild(child);
+            addViewInLayout(child, 0, child.getLayoutParams(), true);
+            topOffset -= child.getMeasuredHeight();
+            firstPos --;
+        }
+
+    }
+
+    /**
+     * 测量每个child的宽和高
+     *
+     * @param view
+     * @return
+     */
+    private View measureChild(View view) {
+        LayoutParams params = view.getLayoutParams();
+        if (params == null) {
+            params = new LayoutParams(LayoutParams.MATCH_PARENT,
+                    LayoutParams.WRAP_CONTENT);
+            view.setLayoutParams(params);
+        }
+
+        view.measure(getMeasuredWidthAndState(), MeasureSpec.UNSPECIFIED);
+        return view;
+
+    }
+
+    private void removeUnVisibleView() {
+        View first = getChildAt(0);
+        Log.d("test", "removeUnVisibleView.getTop = " + getTop() + ", first is null ? " + first +
+                ", first.getBottom() = " + (first == null ? 0 : first.getBottom()));
+        while (first != null
+                && first.getBottom() < getTop()) {
+            removeViewInLayout(first);
+            topOffset += first.getMeasuredHeight();
+            first = getChildAt(0);
+            firstPos ++;
+        }
+
+        View last = getChildAt(getChildCount() - 1);
+        while (last != null
+                && last.getTop() < getBottom()) {
+            removeViewInLayout(last);
+            last = getChildAt(getChildCount() - 1);
+            lastPos --;
+        }
     }
 
 
@@ -40,11 +156,13 @@ public class TestScrollView extends LinearLayout {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        if (getMeasuredHeight() != 0 && !mIsInit) {
-            initAddView();
-            mIsInit = true;
-        }
+//        if (getMeasuredHeight() != 0 && !mIsInit) {
+//            initAddView();
+//            mIsInit = true;
+//        }
+        viewHeight = getMeasuredHeight();
     }
+
 
     float downX;
     float downY;

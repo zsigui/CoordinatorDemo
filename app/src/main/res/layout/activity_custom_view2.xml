@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.jackiez.materialdemo.extra.widget.TestScrollView xmlns:android = "http://schemas.android.com/apk/res/android"
-                                                      android:orientation = "vertical"
-                                                      android:layout_width = "match_parent"
-                                                      android:layout_height = "match_parent"
-                                                      android:background = "@android:color/white" >
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" >
 
-</com.jackiez.materialdemo.extra.widget.TestScrollView >
+    <com.jackiez.materialdemo.extra.widget.HListView
+            android:id="@+id/listView"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dip"
+            android:background="#dddd"
+            android:cacheColorHint="#00000000" />
+
+</RelativeLayout>
