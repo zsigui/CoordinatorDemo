@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.jackiez.materialdemo.R;
 import com.jackiez.materialdemo.extra.widget.MonthDateView;
@@ -58,7 +57,8 @@ public class CustomViewActivity extends AppCompatActivity {
 
     private List<Map<String, Object>> getData(){
 
-        int [] pic = {R.drawable.a,R.drawable.b};
+        int [] pic = {R.drawable.a,R.drawable.b,R.drawable.c,R.drawable.d,R.drawable.e,R.drawable.f,
+                R.drawable.g,R.drawable.h,R.drawable.i};
 
         ArrayList<Map<String,Object>> list = new ArrayList<>();
         HashMap<String, Object> map;
@@ -68,6 +68,7 @@ public class CustomViewActivity extends AppCompatActivity {
             map.put("img", pic[i]);
             list.add(map);
         }
+
         return list;
 
     }
@@ -105,7 +106,7 @@ public class CustomViewActivity extends AppCompatActivity {
                 convertView = LayoutInflater.from(mContext).inflate(R.layout.list_item, parent);
 
                 holderView.imageView =(ImageView) convertView.findViewById(R.id.imageView);
-                holderView.textView = (TextView) convertView.findViewById(R.id.textView);
+//                holderView.textView = (TextView) convertView.findViewById(R.id.textView);
 
                 convertView.setTag(holderView);
             }else{
@@ -114,7 +115,7 @@ public class CustomViewActivity extends AppCompatActivity {
 
 
             holderView.imageView.setImageResource((Integer) mList.get(position).get("img"));
-            holderView.textView.setText((String) mList.get(position).get("index"));
+//            holderView.textView.setText((String) mList.get(position).get("index"));
 
             //return convertView.findViewById(R.id.item);
             return convertView;
@@ -122,7 +123,7 @@ public class CustomViewActivity extends AppCompatActivity {
 
         class HolderView{
             ImageView imageView;
-            TextView textView;
+//            TextView textView;
         }
     }
 
