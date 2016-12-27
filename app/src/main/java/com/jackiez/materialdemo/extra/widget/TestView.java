@@ -3,13 +3,11 @@ package com.jackiez.materialdemo.extra.widget;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ListAdapter;
 import android.widget.Scroller;
-
-import com.jackiez.materialdemo.R;
 
 /**
  * @author JackieZhuang
@@ -32,31 +30,111 @@ public class TestView extends ViewGroup {
     }
 
     Scroller mScroller;
+    ListAdapter mAdapter;
 
-    private boolean isInit = false;
+    public void setAdapter(ListAdapter adapter) {
+        mAdapter = adapter;
+        requestLayout();
+    }
+
+    private int startIndex = -1;
+    private int endIndex = 0;
+    private int currentViewTotalHeight = 0;
+    private int startViewY = 0;
+    private int endViewY = 0;
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        if (isInit || getChildCount() == 0) {
+        if (mAdapter == null || mAdapter.getCount() == 0) {
+            clearViewAndState();
+            return;
+        }
+        final int viewHeight = getHeight();
+        // 初始化
+        if (currentViewTotalHeight == 0) {
+            removeAllViewsInLayout();
+            endViewY = startViewY = 0;
+            startIndex = -1;
+            endIndex = 0;
             View child;
-            for (int i = 0 ; i < 3; i++) {
-                child = LayoutInflater.from(getContext()).inflate(R.layout.list_item_text, this, false);
+            while (endViewY < viewHeight && endIndex < mAdapter.getCount()) {
+                child = mAdapter.getView(endIndex ++, null, this);
+                checkViewNotNull(child);
                 measureChild(child);
-                addViewInLayout(child, i, child.getLayoutParams(), true);
+                endViewY += child.getMeasuredHeight();
+                currentViewTotalHeight += child.getMeasuredHeight();
             }
         }
-//        if (!changed)
-//            return;
-        int offsetTop = distanceY;
-        for (int i = 0; i < getChildCount(); i++) {
-            View v = getChildAt(i);
-            v.layout(0, offsetTop, v.getMeasuredWidth(), offsetTop + v.getMeasuredHeight());
-            offsetTop += v.getMeasuredHeight();
-            Log.d("test", "offsetTop = " + offsetTop);
+
+        // 填充上下空缺子视图
+        if (getChildCount() > 0 && currentViewTotalHeight != 0) {
+            View child;
+            while (startViewY > 0 && startIndex < endIndex
+                    && startIndex > -1) {
+                child = mAdapter.getView(startIndex --, null, this);
+                checkViewNotNull(child);
+                measureChild(child);
+                addViewInLayout(child, 0, child.getLayoutParams(), true);
+                currentViewTotalHeight += child.getMeasuredHeight();
+                startViewY -= child.getMeasuredHeight();
+            }
+
+            while (endViewY < viewHeight && startIndex < endViewY
+                    && endViewY < mAdapter.getCount()) {
+                child = mAdapter.getView(endIndex ++, null, this);
+                checkViewNotNull(child);
+                measureChild(child);
+                addViewInLayout(child, getChildCount() - 1, child.getLayoutParams(), true);
+                currentViewTotalHeight += child.getMeasuredHeight();
+                endViewY += child.getMeasuredHeight();
+            }
+
+
+            // 移除上下多余子视图
+            child = getChildAt(0);
+            while (child != null && startViewY + child.getMeasuredHeight() < 0
+                    && startIndex < endIndex) {
+                removeViewInLayout(child);
+                startViewY += child.getMeasuredHeight();
+                currentViewTotalHeight -= child.getMeasuredHeight();
+                startIndex ++;
+                child = getChildAt(0);
+            }
+
+            child = getChildAt(getChildCount() - 1);
+            while (child != null && endViewY - child.getMeasuredHeight() > viewHeight
+                    && startIndex < endIndex) {
+                removeViewInLayout(child);
+                endViewY -= child.getMeasuredHeight();
+                currentViewTotalHeight -= child.getMeasuredHeight();
+                endIndex --;
+                child = getChildAt(getChildCount() - 1);
+            }
+
+            // 进行子视图布局
+            int offsetTop = startViewY;
+            for (int i = 0; i < getChildCount(); i++) {
+                child = getChildAt(i);
+                child.layout(0, offsetTop, child.getMeasuredWidth(), offsetTop + child.getMeasuredHeight());
+                offsetTop += child.getMeasuredHeight();
+            }
         }
     }
 
-    int distanceY = 0;
+    private void checkViewNotNull(View child) {
+        if (child == null) {
+            throw new IllegalArgumentException("Adapter.getView() need to return not null view!");
+        }
+    }
+
+    private void clearViewAndState() {
+        startIndex = -1;
+        endIndex = 0;
+        startViewY = endViewY = 0;
+        currentViewTotalHeight = 0;
+        removeAllViewsInLayout();
+    }
+
 
     private void measureChild(View child) {
         if (child == null)
@@ -112,20 +190,12 @@ public class TestView extends ViewGroup {
             case MotionEvent.ACTION_MOVE:
                 int moveY = (int) (event.getY() - lastY);
                 lastY = (int) event.getY();
-                int diffY = (int) (event.getY() - downY);
-                Log.d("test", "onTouchEvent.moveY = " + moveY + ", diffY = " + diffY + ", getTop = " + getTop()
-                 + ", child.getBottom = " + getChildAt(0).getBottom() + ", child.getTop = " + getChildAt(0).getTop()
-                 + ", child1.getTop = " + getChildAt(1).getTop());
-//                scrollBy(0, moveY);
-                distanceY += moveY;
+                startViewY += moveY;
+                endViewY += moveY;
                 requestLayout();
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
-                Log.d("test", "scroll to 0");
-                scrollTo(0, 0);
-                distanceY = 0;
-                requestLayout();
                 break;
         }
         super.onTouchEvent(event);

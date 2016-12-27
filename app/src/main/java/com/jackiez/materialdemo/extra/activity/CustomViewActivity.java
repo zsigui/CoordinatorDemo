@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import com.jackiez.materialdemo.R;
 import com.jackiez.materialdemo.extra.widget.MonthDateView;
+import com.jackiez.materialdemo.extra.widget.TestView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,9 +33,9 @@ public class CustomViewActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_custom_view2);
-//        final HListView list = (HListView) findViewById(R.id.listView);
-//        final MyAdapter adapter = new MyAdapter(this, getData());
-//        list.setAdapter(adapter);
+        final TestView list = (TestView) findViewById(R.id.listView);
+        final MyAdapter adapter = new MyAdapter(this, getData());
+        list.setAdapter(adapter);
 //        mdv = (MonthDateView) findViewById(R.id.mdv_content);
 //        mdv.setItemTapListener(new MonthDateView.onItemTapListener() {
 //            @Override
