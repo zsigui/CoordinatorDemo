@@ -13,6 +13,7 @@ import android.widget.ImageView;
 
 import com.jackiez.materialdemo.R;
 import com.jackiez.materialdemo.extra.widget.MonthDateView;
+import com.luna.powersaver.gp.view.ECGView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,10 +28,13 @@ public class CustomViewActivity extends AppCompatActivity {
 
     MonthDateView mdv;
 
+    ECGView mECGView;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_custom_view2);
+        mECGView = (ECGView) findViewById(R.id.ecg_view);
+        mECGView.startAnim();
 //        final HListView list = (HListView) findViewById(R.id.listView);
 //        final MyAdapter adapter = new MyAdapter(this, getData());
 //        list.setAdapter(adapter);
@@ -53,6 +57,12 @@ public class CustomViewActivity extends AppCompatActivity {
 //
 //            }
 //        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mECGView.stopAnim();
     }
 
     private List<Map<String, Object>> getData(){

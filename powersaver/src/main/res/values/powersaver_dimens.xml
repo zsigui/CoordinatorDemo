@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources >
+    <!-- time -->
+    <dimen name = "powersaver_dimen_time" >35sp</dimen >
+    <dimen name = "powersaver_dimen_date" >12sp</dimen >
+    <dimen name = "powersaver_dimen_divider_height" >34dp</dimen >
+    <dimen name = "powersaver_dimen_divider" >1dp</dimen >
+    <dimen name = "powersaver_dimen_time_margin_left" >20dp</dimen >
+    <dimen name = "powersaver_dimen_time_margin_top" >25dp</dimen >
+    <dimen name = "powersaver_dimen_divider_margin" >10dp</dimen >
+    <dimen name = "powersaver_dimen_date_margin_top" >6dp</dimen >
+    <dimen name = "powersaver_dimen_date_margin_bottom" >3dp</dimen >
+
+    <!-- progress -->
+    <dimen name = "powersaver_dimen_progress_diameter" >170dp</dimen >
+    <dimen name = "powersaver_dimen_progress_margin_top" >60dp</dimen >
+    <dimen name = "powersaver_dimen_pb_text" >40sp</dimen >
+    <dimen name = "powersaver_dimen_progress_tv_margin_top" >10dp</dimen >
+    <dimen name = "powersaver_dimen_progress_remain_text" >14sp</dimen >
+
+    <dimen name = "powersaver_dimen_icon_margin_top" >60dp</dimen >
+    <dimen name = "powersaver_dimen_icon_text" >12sp</dimen >
+    <dimen name = "powersaver_dimen_icon_point" >4dp</dimen >
+    <dimen name = "powersaver_dimen_icon_point_margin_top" >12dp</dimen >
+    <dimen name = "powersaver_dimen_icon_drawable_padding" >8dp</dimen >
+
+    <dimen name = "powersaver_dimen_flash_margin_bottom" >30dp</dimen >
+</resources >

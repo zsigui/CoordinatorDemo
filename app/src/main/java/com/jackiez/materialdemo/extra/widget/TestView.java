@@ -38,10 +38,22 @@ public class TestView extends ViewGroup {
     private int allowMaxDistance = 0;
     // 暂时使用 listAdapter，后面修改
     private ListAdapter mAdapter;
-    int startIndex = -1, endIndex = -1;
+    int startIndex = -1, endIndex = 0;
+    // 表示第一项被遮盖部分的距离(被遮盖的情况下，否则 offset = 0，正数表达)
+    private int offsetTop = 0;
+    // 表示最后一项被遮盖部分的距离(被遮盖的情况下，否则 offset = 0，正数表达)
+    private int offsetBottom = 0;
+    private int totalHeight = 0;
+    private int visibleBottomY = 0;
+    private int currentTotalHeight = 0;
 
     public void setAdapter(ListAdapter adapter) {
         mAdapter = adapter;
+        requestLayout();
+    }
+
+    public void notifyChange() {
+        currentTotalHeight = 0;
         requestLayout();
     }
 
@@ -61,6 +73,53 @@ public class TestView extends ViewGroup {
 
         if (mAdapter == null || !changed)
             return;
+
+        if (currentTotalHeight == 0) {
+            // 初始添加视图
+            if (getChildCount() != 0)
+                removeAllViewsInLayout();
+            int i = 0;
+            View child;
+            visibleBottomY = startDistanceY;
+            while (i < mAdapter.getCount()
+                    && visibleBottomY < getHeight()) {
+                child = mAdapter.getView(endIndex, null, this);
+                measureChild(child);
+                visibleBottomY += child.getMeasuredHeight();
+                currentTotalHeight += child.getMeasuredHeight();
+            }
+        }
+
+
+        // 当前移动位置
+        int moveY = 0;
+        if (moveY > 0) {
+            // 表示下滑，顶部添加视图
+            moveY -= offsetTop;
+            View first;
+            while (startIndex < endIndex
+                    && startIndex > -1
+                    && moveY > 0) {
+                first = mAdapter.getView(startIndex, null, this);
+                measureChild(first);
+                moveY -= first.getMeasuredHeight();
+            }
+        } else {
+            // 表示上滑，底部添加视图
+            moveY = -moveY;
+            moveY -= offsetTop;
+            View last;
+            while (startIndex < endIndex
+                    && endIndex < mAdapter.getCount()
+                    && moveY > 0) {
+                last = mAdapter.getView(endIndex, null, this);
+                measureChild(last);
+                moveY -= last.getMeasuredHeight();
+            }
+        }
+
+
+
         // 移除看不见的视图
         if (getChildCount() > 0) {
             View first = getChildAt(0);
@@ -85,7 +144,7 @@ public class TestView extends ViewGroup {
         // 添加底部视图
 
         // 进行视图布局
-        int offsetTop = distanceY;
+        int offsetTop = startDistanceY;
         for (int i = 0; i < getChildCount(); i++) {
             View v = getChildAt(i);
             v.layout(0, offsetTop, v.getMeasuredWidth(), offsetTop + v.getMeasuredHeight());
@@ -93,7 +152,7 @@ public class TestView extends ViewGroup {
         }
     }
 
-    int distanceY = 0;
+    int startDistanceY = 0;
 
     private void measureChild(View child) {
         if (child == null)
@@ -153,25 +212,25 @@ public class TestView extends ViewGroup {
                 int moveY = (int) (event.getY() - lastY);
                 lastY = (int) event.getY();
 //                int diffY = (int) (event.getY() - downY);
-                if (distanceY > 0) {
-                    distanceY += (moveY > 0 ? moveY * 0.5f : moveY);
-                } else if (allowMaxDistance > 0 && distanceY < -allowMaxDistance) {
-                    distanceY += moveY;
+                if (startDistanceY > 0) {
+                    startDistanceY += (moveY > 0 ? moveY * 0.5f : moveY);
+                } else if (allowMaxDistance > 0 && startDistanceY < -allowMaxDistance) {
+                    startDistanceY += moveY;
                 } else {
-                    distanceY += moveY;
+                    startDistanceY += moveY;
                 }
                 requestLayout();
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
-                if (distanceY > 0) {
+                if (startDistanceY > 0) {
                     // 起始回弹，可通过 Scroller 来减速回弹
-                    int diffY = -distanceY;
+                    int diffY = -startDistanceY;
                     lastScrollY = 0;
                     mScroller.startScroll(0, 0, 0,  diffY, computeScrollDuration(-diffY));
-                } else if (distanceY < -allowMaxDistance) {
-                    // 因为 distanceY < 0, allowMaxDistance > 0, -allowMaxDistance < distanceY, 故 diffY > 0
-                    int diffY = -allowMaxDistance - distanceY;
+                } else if (startDistanceY < -allowMaxDistance) {
+                    // 因为 startDistanceY < 0, allowMaxDistance > 0, -allowMaxDistance < startDistanceY, 故 diffY > 0
+                    int diffY = -allowMaxDistance - startDistanceY;
                     lastScrollY = 0;
                     mScroller.startScroll(0, 0, 0, diffY, computeScrollDuration(diffY));
                 }
@@ -187,7 +246,7 @@ public class TestView extends ViewGroup {
     public void computeScroll() {
         if (mScroller.computeScrollOffset()) {
             final int y = mScroller.getCurrY();
-            distanceY += (y - lastScrollY);
+            startDistanceY += (y - lastScrollY);
             lastScrollY = y;
             requestLayout();
         }

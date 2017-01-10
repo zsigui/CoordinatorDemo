@@ -15,6 +15,7 @@ import android.view.View;
 
 import com.jackiez.materialdemo.R;
 import com.jackiez.materialdemo.extra.dialog.BottomSheetDialog;
+import com.luna.powersaver.gp.GuardService;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -23,6 +24,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        GuardService.testAliveAndCreateIfNot(this);
+
         setContentView(R.layout.activity_main);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.main_toolbar);

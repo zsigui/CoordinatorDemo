@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android = "http://schemas.android.com/apk/res/android"
+                xmlns:tools = "http://schemas.android.com/tools"
+                android:id = "@+id/powersaver_rl_container"
+                android:orientation = "vertical"
+                android:layout_width = "match_parent"
+                android:layout_height = "match_parent"
+                android:background = "@drawable/powersaver_default_bg"
+                tools:ignore = "RtlHardcoded" >
+
+    <TextView
+            android:id = "@+id/powersaver_tv_time"
+            android:layout_width = "wrap_content"
+            android:layout_height = "wrap_content"
+            android:textColor = "@color/powersaver_time_fg"
+            android:textSize = "@dimen/powersaver_dimen_time"
+            android:layout_marginLeft = "@dimen/powersaver_dimen_time_margin_left"
+            android:layout_marginTop = "@dimen/powersaver_dimen_time_margin_top"
+            tools:text = "19:30" />
+
+    <View
+            android:id = "@+id/powersaver_divider"
+            android:layout_width = "@dimen/powersaver_dimen_divider"
+            android:layout_height = "@dimen/powersaver_dimen_divider_height"
+            android:background = "@color/powersaver_time_divider_bg"
+            android:layout_alignTop = "@+id/powersaver_tv_time"
+            android:layout_toRightOf = "@+id/powersaver_tv_time"
+            android:layout_marginTop = "@dimen/powersaver_dimen_date_margin_top"
+            android:layout_marginLeft = "@dimen/powersaver_dimen_divider_margin"
+            android:layout_marginRight = "@dimen/powersaver_dimen_divider_margin" />
+
+    <TextView
+            android:id = "@+id/powersaver_tv_week"
+            android:layout_width = "wrap_content"
+            android:layout_height = "wrap_content"
+            android:textColor = "@color/powersaver_time_fg"
+            android:textSize = "@dimen/powersaver_dimen_date"
+            android:layout_alignTop = "@+id/powersaver_tv_time"
+            android:layout_toRightOf = "@+id/powersaver_divider"
+            android:layout_marginTop = "@dimen/powersaver_dimen_date_margin_top"
+            android:layout_marginBottom = "@dimen/powersaver_dimen_date_margin_bottom"
+            android:text = "Sunday" />
+
+    <TextView
+            android:id = "@+id/powersaver_tv_date"
+            android:layout_width = "wrap_content"
+            android:layout_height = "wrap_content"
+            android:textColor = "@color/powersaver_time_fg"
+            android:textSize = "@dimen/powersaver_dimen_date"
+            android:layout_below = "@+id/powersaver_tv_week"
+            android:layout_alignLeft = "@+id/powersaver_tv_week"
+            tools:text = "September 23" />
+
+
+    <com.luna.powersaver.gp.view.CircleProgressView
+            android:id = "@+id/powersaver_pb"
+            android:layout_width = "@dimen/powersaver_dimen_progress_diameter"
+            android:layout_height = "@dimen/powersaver_dimen_progress_diameter"
+            android:layout_marginTop = "@dimen/powersaver_dimen_progress_margin_top"
+            android:layout_below = "@+id/powersaver_tv_date"
+            android:layout_centerHorizontal = "true" />
+
+    <!--<TextView-->
+    <!--android:id = "@+id/powersaver_tv_percent"-->
+    <!--android:layout_width = "wrap_content"-->
+    <!--android:layout_height = "wrap_content"-->
+    <!--android:textColor = "@color/powersaver_main_color"-->
+    <!--android:textSize = "@dimen/powersaver_dimen_pb_text"-->
+    <!--android:layout_alignTop = "@id/powersaver_pb"-->
+    <!--android:layout_marginTop="@dimen/powersaver_dimen_progress_tv_margin_top"-->
+    <!--android:layout_centerHorizontal = "true"-->
+    <!--tools:text = "75%" />-->
+
+    <TextView
+            android:id = "@+id/powersaver_tv_charge_remain"
+            android:layout_width = "wrap_content"
+            android:layout_height = "wrap_content"
+            android:layout_centerHorizontal = "true"
+            android:textColor = "@color/powersaver_sencond_color"
+            android:layout_below = "@+id/powersaver_pb"
+            android:textSize = "@dimen/powersaver_dimen_progress_remain_text"
+            android:layout_marginTop = "@dimen/powersaver_dimen_progress_tv_margin_top"
+            tools:text = "Charging time remaining  35min" />
+
+    <LinearLayout
+            android:id = "@+id/powersaver_ll_icon"
+            android:layout_width = "wrap_content"
+            android:layout_height = "wrap_content"
+            android:layout_below = "@+id/powersaver_tv_charge_remain"
+            android:layout_marginTop = "@dimen/powersaver_dimen_icon_margin_top"
+            android:layout_marginLeft = "20dp"
+            android:layout_marginRight = "20dp"
+            android:layout_centerHorizontal = "true"
+            android:orientation = "horizontal" >
+
+        <CheckedTextView
+                android:id = "@+id/powersaver_ctv_quick"
+                android:layout_width = "wrap_content"
+                android:layout_height = "wrap_content"
+                tools:checked = "true"
+                android:drawableTop = "@drawable/powersaver_selector_quickcharge"
+                android:drawablePadding = "@dimen/powersaver_dimen_icon_drawable_padding"
+                android:textColor = "@color/powersaver_color_ic"
+                android:textSize = "@dimen/powersaver_dimen_icon_text"
+                android:text = "@string/powersaver_st_quick_charge" />
+
+        <View
+                android:layout_width = "@dimen/powersaver_dimen_icon_point"
+                android:layout_height = "@dimen/powersaver_dimen_icon_point"
+                android:layout_marginLeft = "@dimen/powersaver_dimen_icon_point"
+                android:layout_marginRight = "@dimen/powersaver_dimen_icon_point"
+                android:layout_marginTop = "@dimen/powersaver_dimen_icon_point_margin_top"
+                android:background = "@drawable/powersaver_shape_point" />
+
+        <View
+                android:layout_width = "@dimen/powersaver_dimen_icon_point"
+                android:layout_height = "@dimen/powersaver_dimen_icon_point"
+                android:layout_marginLeft = "@dimen/powersaver_dimen_icon_point"
+                android:layout_marginRight = "@dimen/powersaver_dimen_icon_point"
+                android:layout_marginTop = "@dimen/powersaver_dimen_icon_point_margin_top"
+                android:background = "@drawable/powersaver_shape_point" />
+
+        <View
+                android:layout_width = "@dimen/powersaver_dimen_icon_point"
+                android:layout_height = "@dimen/powersaver_dimen_icon_point"
+                android:layout_marginLeft = "@dimen/powersaver_dimen_icon_point"
+                android:layout_marginRight = "@dimen/powersaver_dimen_icon_point"
+                android:layout_marginTop = "@dimen/powersaver_dimen_icon_point_margin_top"
+                android:background = "@drawable/powersaver_shape_point" />
+
+        <CheckedTextView
+                android:id = "@+id/powersaver_ctv_continuous"
+                android:layout_width = "wrap_content"
+                android:layout_height = "wrap_content"
+                android:drawableTop = "@drawable/powersaver_selector_continuouscharge"
+                android:drawablePadding = "@dimen/powersaver_dimen_icon_drawable_padding"
+                android:textColor = "@color/powersaver_color_ic"
+                android:textSize = "@dimen/powersaver_dimen_icon_text"
+                android:text = "@string/powersaver_st_continuous_charge" />
+
+        <View
+                android:layout_width = "@dimen/powersaver_dimen_icon_point"
+                android:layout_height = "@dimen/powersaver_dimen_icon_point"
+                android:layout_marginLeft = "@dimen/powersaver_dimen_icon_point"
+                android:layout_marginRight = "@dimen/powersaver_dimen_icon_point"
+                android:layout_marginTop = "@dimen/powersaver_dimen_icon_point_margin_top"
+                android:background = "@drawable/powersaver_shape_point" />
+
+        <View
+                android:layout_width = "@dimen/powersaver_dimen_icon_point"
+                android:layout_height = "@dimen/powersaver_dimen_icon_point"
+                android:layout_marginLeft = "@dimen/powersaver_dimen_icon_point"
+                android:layout_marginRight = "@dimen/powersaver_dimen_icon_point"
+                android:layout_marginTop = "@dimen/powersaver_dimen_icon_point_margin_top"
+                android:background = "@drawable/powersaver_shape_point" />
+
+        <View
+                android:layout_width = "@dimen/powersaver_dimen_icon_point"
+                android:layout_height = "@dimen/powersaver_dimen_icon_point"
+                android:layout_marginLeft = "@dimen/powersaver_dimen_icon_point"
+                android:layout_marginRight = "@dimen/powersaver_dimen_icon_point"
+                android:layout_marginTop = "@dimen/powersaver_dimen_icon_point_margin_top"
+                android:background = "@drawable/powersaver_shape_point" />
+
+        <CheckedTextView
+                android:id = "@+id/powersaver_ctv_trickle"
+                android:layout_width = "wrap_content"
+                android:layout_height = "wrap_content"
+                android:drawableTop = "@drawable/powersaver_selector_tricklecharge"
+                android:drawablePadding = "@dimen/powersaver_dimen_icon_drawable_padding"
+                android:textColor = "@color/powersaver_color_ic"
+                android:textSize = "@dimen/powersaver_dimen_icon_text"
+                android:text = "@string/powersaver_st_trickle_charge" />
+    </LinearLayout >
+
+
+    <com.luna.powersaver.gp.view.FlashTextView
+            android:layout_width = "wrap_content"
+            android:layout_height = "wrap_content"
+            android:layout_alignParentBottom = "true"
+            android:layout_marginBottom = "@dimen/powersaver_dimen_flash_margin_bottom"
+            android:layout_centerHorizontal = "true"
+            android:text = "@string/powersaver_st_unlock" />
+</RelativeLayout >

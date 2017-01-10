@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android = "http://schemas.android.com/apk/res/android"
+       android:shape = "oval" >
+    <corners android:radius = "@dimen/powersaver_dimen_icon_point" />
+    <solid android:color = "@color/powersaver_icon_point_bg" />
+</shape >
