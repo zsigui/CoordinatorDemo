@@ -5,16 +5,18 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.jackiez.materialdemo.R;
 import com.jackiez.materialdemo.extra.widget.MonthDateView;
-import com.jackiez.materialdemo.extra.widget.TestView;
+import com.jackiez.materialdemo.extra.widget.SwipeBackView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,7 +27,7 @@ import java.util.Map;
  * Created by zsigui on 16-12-13.
  */
 
-public class CustomViewActivity extends AppCompatActivity {
+public class CustomViewActivity extends AppCompatActivity implements SwipeBackView.SwipeBackListener {
 
     MonthDateView mdv;
 
@@ -33,7 +35,11 @@ public class CustomViewActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_custom_view2);
-        final TestView list = (TestView) findViewById(R.id.listView);
+
+//        final TestView list = (TestView) findViewById(R.id.listView);
+        SwipeBackView rl = (SwipeBackView) findViewById(R.id.rlContent);
+        rl.setListener(this);
+        final ListView list = (ListView) findViewById(R.id.listView);
         final MyAdapter adapter = new MyAdapter(this, getData());
         list.setAdapter(adapter);
 //        mdv = (MonthDateView) findViewById(R.id.mdv_content);
@@ -59,7 +65,7 @@ public class CustomViewActivity extends AppCompatActivity {
 
     private List<Map<String, Object>> getData(){
 
-        int [] pic = {R.drawable.a,R.drawable.b};
+        int [] pic = {R.drawable.a,R.drawable.b, R.drawable.c, R.drawable.d, R.drawable.e};
 
         ArrayList<Map<String,Object>> list = new ArrayList<>();
         HashMap<String, Object> map;
@@ -70,6 +76,17 @@ public class CustomViewActivity extends AppCompatActivity {
             list.add(map);
         }
         return list;
+
+    }
+
+    @Override
+    public void onSwipe(float offset) {
+        Log.d("test", "当前位置：" + offset);
+    }
+
+    @Override
+    public void onFinishSwipe() {
+        Log.d("test", "完成滑动滚出!");
 
     }
 
@@ -103,7 +120,7 @@ public class CustomViewActivity extends AppCompatActivity {
             HolderView holderView = null;
             if(convertView == null ){
                 holderView = new HolderView();
-                convertView = LayoutInflater.from(mContext).inflate(R.layout.list_item, parent);
+                convertView = LayoutInflater.from(mContext).inflate(R.layout.list_item, parent, false);
 
                 holderView.imageView =(ImageView) convertView.findViewById(R.id.imageView);
                 holderView.textView = (TextView) convertView.findViewById(R.id.textView);

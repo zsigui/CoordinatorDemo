@@ -1,15 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.jackiez.materialdemo.extra.widget.SwipeBackView xmlns:android="http://schemas.android.com/apk/res/android"
                 xmlns:tools="http://schemas.android.com/tools"
+                android:id="@+id/rlContent"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" >
 
-    <com.jackiez.materialdemo.extra.widget.TestView
-            android:id="@+id/listView"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dip"
-            android:background="#dddd"
-            android:cacheColorHint="#00000000" />
-
-</RelativeLayout>
+    <!--<com.jackiez.materialdemo.extra.widget.TestView-->
+            <!--android:id="@+id/listView"-->
+            <!--android:layout_width="fill_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_marginTop="10dip"-->
+            <!--android:background="#dddd"-->
+            <!--android:cacheColorHint="#00000000" />-->
+   <ListView
+    android:id="@+id/listView"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="#dddd"
+    android:cacheColorHint="#00000000" />
+</com.jackiez.materialdemo.extra.widget.SwipeBackView>
