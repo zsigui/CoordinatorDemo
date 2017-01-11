@@ -5,14 +5,17 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 
 import com.jackiez.materialdemo.R;
 import com.jackiez.materialdemo.extra.widget.MonthDateView;
+import com.jackiez.materialdemo.extra.widget.SwipeBackView;
 import com.luna.powersaver.gp.view.ECGView;
 
 import java.util.ArrayList;
@@ -24,20 +27,23 @@ import java.util.Map;
  * Created by zsigui on 16-12-13.
  */
 
-public class CustomViewActivity extends AppCompatActivity {
+public class CustomViewActivity extends AppCompatActivity implements SwipeBackView.SwipeBackListener {
 
     MonthDateView mdv;
 
     ECGView mECGView;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_custom_view2);
-        mECGView = (ECGView) findViewById(R.id.ecg_view);
-        mECGView.startAnim();
-//        final HListView list = (HListView) findViewById(R.id.listView);
-//        final MyAdapter adapter = new MyAdapter(this, getData());
-//        list.setAdapter(adapter);
+
+//        final TestView list = (TestView) findViewById(R.id.listView);
+        SwipeBackView rl = (SwipeBackView) findViewById(R.id.rlContent);
+        rl.setListener(this);
+        final ListView list = (ListView) findViewById(R.id.listView);
+        final MyAdapter adapter = new MyAdapter(this, getData());
+        list.setAdapter(adapter);
 //        mdv = (MonthDateView) findViewById(R.id.mdv_content);
 //        mdv.setItemTapListener(new MonthDateView.onItemTapListener() {
 //            @Override
@@ -65,16 +71,15 @@ public class CustomViewActivity extends AppCompatActivity {
         mECGView.stopAnim();
     }
 
-    private List<Map<String, Object>> getData(){
+    private List<Map<String, Object>> getData() {
 
-        int [] pic = {R.drawable.a,R.drawable.b,R.drawable.c,R.drawable.d,R.drawable.e,R.drawable.f,
-                R.drawable.g,R.drawable.h,R.drawable.i};
+        int[] pic = {R.drawable.a, R.drawable.b, R.drawable.c, R.drawable.d, R.drawable.e};
 
-        ArrayList<Map<String,Object>> list = new ArrayList<>();
+        ArrayList<Map<String, Object>> list = new ArrayList<>();
         HashMap<String, Object> map;
-        for(int i = 0;i<pic.length;i++){
-            map =new HashMap<>();
-            map.put("index", "第"+(i+1)+"张");
+        for (int i = 0; i < pic.length; i++) {
+            map = new HashMap<>();
+            map.put("index", "第" + (i + 1) + "张");
             map.put("img", pic[i]);
             list.add(map);
         }
@@ -83,12 +88,23 @@ public class CustomViewActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void onSwipe(float offset) {
+        Log.d("test", "当前位置：" + offset);
+    }
+
+    @Override
+    public void onFinishSwipe() {
+        Log.d("test", "完成滑动滚出!");
+
+    }
+
     public static class MyAdapter extends BaseAdapter {
 
-        private Context mContext ;
-        private List<Map<String,Object>> mList;
+        private Context mContext;
+        private List<Map<String, Object>> mList;
 
-        public MyAdapter(Context context ,List<Map<String,Object>> list){
+        public MyAdapter(Context context, List<Map<String, Object>> list) {
             this.mContext = context;
             this.mList = list;
         }
@@ -111,15 +127,15 @@ public class CustomViewActivity extends AppCompatActivity {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             HolderView holderView = null;
-            if(convertView == null ){
+            if (convertView == null) {
                 holderView = new HolderView();
-                convertView = LayoutInflater.from(mContext).inflate(R.layout.list_item, parent);
+                convertView = LayoutInflater.from(mContext).inflate(R.layout.list_item, parent, false);
 
-                holderView.imageView =(ImageView) convertView.findViewById(R.id.imageView);
+                holderView.imageView = (ImageView) convertView.findViewById(R.id.imageView);
 //                holderView.textView = (TextView) convertView.findViewById(R.id.textView);
 
                 convertView.setTag(holderView);
-            }else{
+            } else {
                 holderView = (HolderView) convertView.getTag();
             }
 
@@ -131,7 +147,7 @@ public class CustomViewActivity extends AppCompatActivity {
             return convertView;
         }
 
-        class HolderView{
+        class HolderView {
             ImageView imageView;
 //            TextView textView;
         }

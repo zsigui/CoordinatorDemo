@@ -18,6 +18,8 @@ import android.widget.Scroller;
 public class TestView extends ViewGroup {
 
 
+    private int startDistanceY;
+
     public TestView(Context context) {
         this(context, null);
     }
@@ -32,127 +34,109 @@ public class TestView extends ViewGroup {
     }
 
     Scroller mScroller;
-
-    private boolean isInit = false;
-    // 最顶至可见位置的高度和
-    private int allowMaxDistance = 0;
-    // 暂时使用 listAdapter，后面修改
-    private ListAdapter mAdapter;
-    int startIndex = -1, endIndex = 0;
-    // 表示第一项被遮盖部分的距离(被遮盖的情况下，否则 offset = 0，正数表达)
-    private int offsetTop = 0;
-    // 表示最后一项被遮盖部分的距离(被遮盖的情况下，否则 offset = 0，正数表达)
-    private int offsetBottom = 0;
-    private int totalHeight = 0;
-    private int visibleBottomY = 0;
-    private int currentTotalHeight = 0;
+    ListAdapter mAdapter;
 
     public void setAdapter(ListAdapter adapter) {
         mAdapter = adapter;
         requestLayout();
     }
-
-    public void notifyChange() {
-        currentTotalHeight = 0;
-        requestLayout();
-    }
+    private int startIndex = -1;
+    private int endIndex = 0;
+    private int currentViewTotalHeight = 0;
+    private int startViewY = 0;
+    private int endViewY = 0;
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-//        if (isInit || getChildCount() == 0) {
-//            View child;
-//            for (int i = 0 ; i < 30; i++) {
-//                child = LayoutInflater.from(getContext()).inflate(R.layout.list_item_text, this, false);
-//                ((TextView) child.findViewById(R.id.tv_content)).setText("测试位置" + i);
-//                measureChild(child);
-//                addViewInLayout(child, i, child.getLayoutParams(), true);
-//            }
-//        }
-//        if (!changed)
-//            return;
-
-        if (mAdapter == null || !changed)
+        if (mAdapter == null || mAdapter.getCount() == 0) {
+            clearViewAndState();
             return;
-
-        if (currentTotalHeight == 0) {
-            // 初始添加视图
-            if (getChildCount() != 0)
-                removeAllViewsInLayout();
-            int i = 0;
+        }
+        final int viewHeight = getHeight();
+        // 初始化
+        if (currentViewTotalHeight == 0) {
+            removeAllViewsInLayout();
+            endViewY = startViewY = 0;
+            startIndex = -1;
+            endIndex = 0;
             View child;
-            visibleBottomY = startDistanceY;
-            while (i < mAdapter.getCount()
-                    && visibleBottomY < getHeight()) {
-                child = mAdapter.getView(endIndex, null, this);
+            while (endViewY < viewHeight && endIndex < mAdapter.getCount()) {
+                child = mAdapter.getView(endIndex ++, null, this);
+                checkViewNotNull(child);
                 measureChild(child);
-                visibleBottomY += child.getMeasuredHeight();
-                currentTotalHeight += child.getMeasuredHeight();
+                endViewY += child.getMeasuredHeight();
+                currentViewTotalHeight += child.getMeasuredHeight();
             }
         }
 
-
-        // 当前移动位置
-        int moveY = 0;
-        if (moveY > 0) {
-            // 表示下滑，顶部添加视图
-            moveY -= offsetTop;
-            View first;
-            while (startIndex < endIndex
-                    && startIndex > -1
-                    && moveY > 0) {
-                first = mAdapter.getView(startIndex, null, this);
-                measureChild(first);
-                moveY -= first.getMeasuredHeight();
+        // 填充上下空缺子视图
+        if (getChildCount() > 0 && currentViewTotalHeight != 0) {
+            View child;
+            while (startViewY > 0 && startIndex < endIndex
+                    && startIndex > -1) {
+                child = mAdapter.getView(startIndex --, null, this);
+                checkViewNotNull(child);
+                measureChild(child);
+                addViewInLayout(child, 0, child.getLayoutParams(), true);
+                currentViewTotalHeight += child.getMeasuredHeight();
+                startViewY -= child.getMeasuredHeight();
             }
-        } else {
-            // 表示上滑，底部添加视图
-            moveY = -moveY;
-            moveY -= offsetTop;
-            View last;
-            while (startIndex < endIndex
-                    && endIndex < mAdapter.getCount()
-                    && moveY > 0) {
-                last = mAdapter.getView(endIndex, null, this);
-                measureChild(last);
-                moveY -= last.getMeasuredHeight();
+
+            while (endViewY < viewHeight && startIndex < endViewY
+                    && endViewY < mAdapter.getCount()) {
+                child = mAdapter.getView(endIndex ++, null, this);
+                checkViewNotNull(child);
+                measureChild(child);
+                addViewInLayout(child, getChildCount() - 1, child.getLayoutParams(), true);
+                currentViewTotalHeight += child.getMeasuredHeight();
+                endViewY += child.getMeasuredHeight();
             }
-        }
 
 
-
-        // 移除看不见的视图
-        if (getChildCount() > 0) {
-            View first = getChildAt(0);
-            while (first != null && first.getBottom() < getTop()
+            // 移除上下多余子视图
+            child = getChildAt(0);
+            while (child != null && startViewY + child.getMeasuredHeight() < 0
                     && startIndex < endIndex) {
-                removeViewInLayout(first);
+                removeViewInLayout(child);
+                startViewY += child.getMeasuredHeight();
+                currentViewTotalHeight -= child.getMeasuredHeight();
                 startIndex ++;
-                first = getChildAt(0);
+                child = getChildAt(0);
             }
-            View last = getChildAt(getChildCount() - 1);
-            while (last != null && last.getTop() > getBottom()
+
+            child = getChildAt(getChildCount() - 1);
+            while (child != null && endViewY - child.getMeasuredHeight() > viewHeight
                     && startIndex < endIndex) {
-                removeViewInLayout(last);
+                removeViewInLayout(child);
+                endViewY -= child.getMeasuredHeight();
+                currentViewTotalHeight -= child.getMeasuredHeight();
                 endIndex --;
-                last = getChildAt(getChildCount() - 1);
+                child = getChildAt(getChildCount() - 1);
             }
-        }
 
-        // 添加顶端视图
-
-
-        // 添加底部视图
-
-        // 进行视图布局
-        int offsetTop = startDistanceY;
-        for (int i = 0; i < getChildCount(); i++) {
-            View v = getChildAt(i);
-            v.layout(0, offsetTop, v.getMeasuredWidth(), offsetTop + v.getMeasuredHeight());
-            offsetTop += v.getMeasuredHeight();
+            // 进行子视图布局
+            int offsetTop = startViewY;
+            for (int i = 0; i < getChildCount(); i++) {
+                child = getChildAt(i);
+                child.layout(0, offsetTop, child.getMeasuredWidth(), offsetTop + child.getMeasuredHeight());
+                offsetTop += child.getMeasuredHeight();
+            }
         }
     }
 
-    int startDistanceY = 0;
+    private void checkViewNotNull(View child) {
+        if (child == null) {
+            throw new IllegalArgumentException("Adapter.getView() need to return not null view!");
+        }
+    }
+
+    private void clearViewAndState() {
+        startIndex = -1;
+        endIndex = 0;
+        startViewY = endViewY = 0;
+        currentViewTotalHeight = 0;
+        removeAllViewsInLayout();
+    }
 
     private void measureChild(View child) {
         if (child == null)
@@ -211,31 +195,12 @@ public class TestView extends ViewGroup {
                 mScroller.abortAnimation();
                 int moveY = (int) (event.getY() - lastY);
                 lastY = (int) event.getY();
-//                int diffY = (int) (event.getY() - downY);
-                if (startDistanceY > 0) {
-                    startDistanceY += (moveY > 0 ? moveY * 0.5f : moveY);
-                } else if (allowMaxDistance > 0 && startDistanceY < -allowMaxDistance) {
-                    startDistanceY += moveY;
-                } else {
-                    startDistanceY += moveY;
-                }
+                startViewY += moveY;
+                endViewY += moveY;
                 requestLayout();
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
-                if (startDistanceY > 0) {
-                    // 起始回弹，可通过 Scroller 来减速回弹
-                    int diffY = -startDistanceY;
-                    lastScrollY = 0;
-                    mScroller.startScroll(0, 0, 0,  diffY, computeScrollDuration(-diffY));
-                } else if (startDistanceY < -allowMaxDistance) {
-                    // 因为 startDistanceY < 0, allowMaxDistance > 0, -allowMaxDistance < startDistanceY, 故 diffY > 0
-                    int diffY = -allowMaxDistance - startDistanceY;
-                    lastScrollY = 0;
-                    mScroller.startScroll(0, 0, 0, diffY, computeScrollDuration(diffY));
-                }
-                requestLayout();
-                invalidate();
                 break;
         }
 //        return super.onTouchEvent(event) || isDrag;
