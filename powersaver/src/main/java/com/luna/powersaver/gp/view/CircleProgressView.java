@@ -40,8 +40,8 @@ public class CircleProgressView extends View {
     private int mWidth;
     private int mHeight;
 
-    private static final int ROTATE_ANGLE_CHANGE = 6;
-    private static final int ANIM_INTERVAL = 50;
+    private static final int ROTATE_ANGLE_CHANGE = 1;
+    private static final int ANIM_INTERVAL = 80;
     private boolean isCircleAnim = false;
     private int rotateAngle = 0;
 
@@ -69,7 +69,7 @@ public class CircleProgressView extends View {
         mCirclePaintFg.setAntiAlias(true);
         mCirclePaintFg.setStrokeCap(Paint.Cap.ROUND);
         mCirclePaintFg.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
-        mCirclePaintFg.setColor(ViewUtil.getColor(context, R.color.powersaver_item_color));
+        mCirclePaintFg.setColor(ViewUtil.getColor(context, R.color.powersaver_progress_fg));
 
         mTextPaint = new Paint();
         mTextPaint.setAntiAlias(true);
@@ -82,12 +82,12 @@ public class CircleProgressView extends View {
 
     public void setPercent(int percent) {
         this.mPercent = percent;
-        postInvalidate();
+//        postInvalidate();
     }
 
     public void setStrokeSize(int strokeSize) {
         mStrokeSize = strokeSize;
-        postInvalidate();
+//        postInvalidate();
     }
 
     @Override
@@ -121,6 +121,18 @@ public class CircleProgressView extends View {
             textY = (int) ((mHeight - height) / 2);
 //            startAnim();
         }
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+//        startAnim();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+//        stopAnim();
     }
 
     @Override

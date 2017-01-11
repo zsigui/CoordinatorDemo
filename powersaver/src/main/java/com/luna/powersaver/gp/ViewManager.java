@@ -17,6 +17,7 @@ import com.luna.powersaver.gp.utils.BatteryUtil;
 import com.luna.powersaver.gp.utils.DateUtil;
 import com.luna.powersaver.gp.utils.ViewUtil;
 import com.luna.powersaver.gp.view.CircleProgressView;
+import com.luna.powersaver.gp.view.SwipeBackView;
 
 import java.lang.ref.WeakReference;
 
@@ -33,12 +34,9 @@ public class ViewManager {
     }
 
     public static final int UPDATE_INTERVAL = 1000;
-    private View mContentView;
+    private SwipeBackView mContentView;
     private ViewHolder mViewHolder;
     private Handler mHandler = new Handler();
-    private int mLastPercent;
-    // 每充电1%耗费毫秒
-    private int mChargeOneInMillis;
     class UpdateRunnable implements Runnable {
 
         private Context mContext;
@@ -93,12 +91,17 @@ public class ViewManager {
 
     private void initView(final Context context) {
         mViewHolder = new ViewHolder(context);
-        mContentView = mViewHolder.contentView;
+        mContentView = (SwipeBackView) mViewHolder.contentView;
         mViewHolder.bindData(context);
         mHandler.postDelayed(new UpdateRunnable(context, this), UPDATE_INTERVAL);
-        mContentView.setOnClickListener(new View.OnClickListener() {
+        mContentView.setListener(new SwipeBackView.SwipeBackListener() {
             @Override
-            public void onClick(View v) {
+            public void onSwipe(float offset) {
+
+            }
+
+            @Override
+            public void onFinishSwipe() {
                 hideGuard(context);
             }
         });
@@ -110,16 +113,16 @@ public class ViewManager {
                 ViewGroup.LayoutParams.MATCH_PARENT
         );
         lp.format = PixelFormat.RGBA_8888;
-        lp.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+        lp.flags = WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
                 | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                 | WindowManager.LayoutParams.FLAG_FULLSCREEN
-                | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
-            lp.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN;
-        } else {
-            lp.systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-        }
+                | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
+//        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
+//            lp.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN;
+//        } else {
+//            lp.systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+//        }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
             // 4.4 以下要覆盖需要申请弹窗权限，因为其下 toast 不支持触摸事件
             lp.type = WindowManager.LayoutParams.TYPE_PHONE;
@@ -127,10 +130,10 @@ public class ViewManager {
             lp.type = WindowManager.LayoutParams.TYPE_TOAST;
         }
         lp.gravity = Gravity.FILL | Gravity.LEFT | Gravity.TOP;
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            lp.systemUiVisibility = View.STATUS_BAR_HIDDEN;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+            lp.systemUiVisibility = View.INVISIBLE;
         } else {
-            lp.systemUiVisibility = View.SYSTEM_UI_FLAG_LOW_PROFILE;
+            lp.systemUiVisibility =  View.INVISIBLE;
         }
         return lp;
     }
@@ -162,9 +165,9 @@ public class ViewManager {
             ctv[1] = ctvContinuous;
             ctv[2] = ctvTrickle;
             // 设置高斯模糊背景
-//            ViewUtil.blur(context, ViewUtil.getCenterCropWallPaper(context), contentView);
-            ViewUtil.blur(context, ViewUtil.drawableToBitmap(context.getResources().getDrawable(R.drawable
-                    .powersaver_default_bg)), contentView);
+            ViewUtil.blur(context, ViewUtil.getCenterCropWallPaper(context), contentView);
+//            ViewUtil.blur(context, ViewUtil.drawableToBitmap(context.getResources().getDrawable(R.drawable
+//                    .powersaver_default_bg)), contentView);
         }
 
         void bindData(Context context) {

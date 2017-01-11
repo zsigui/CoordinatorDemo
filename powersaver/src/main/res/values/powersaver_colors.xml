@@ -5,7 +5,8 @@
     <color name = "powersaver_main_color" >#68abff</color >
     <color name = "powersaver_sencond_color" >#99ffffff</color ><!-- 透明度40% -->
     <color name = "powersaver_item_color" >#99ffffff</color ><!-- 透明度40% -->
-    <color name = "powersaver_progress_bg" >#22ffffff</color > <!-- 透明度20% -->
+    <color name = "powersaver_progress_bg" >#CCffffff</color > <!-- 透明度20% -->
     <color name = "powersaver_progress_fg" >#3d93ff</color >
     <color name = "powersaver_icon_point_bg" >#99ffffff</color > <!-- 透明度40% -->
+    <color name = "powsesaver_overlay_bg" >#66091320</color > <!-- 透明度40% -->
 </resources >

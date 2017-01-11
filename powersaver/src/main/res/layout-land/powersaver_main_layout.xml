@@ -66,7 +66,7 @@
                 android:id = "@+id/powersaver_pb"
                 android:layout_width = "@dimen/powersaver_dimen_progress_diameter"
                 android:layout_height = "@dimen/powersaver_dimen_progress_diameter"
-                android:layout_marginTop = "@dimen/powersaver_dimen_progress_margin_top"
+                android:layout_marginTop = "30dp"
                 android:layout_below = "@+id/powersaver_tv_date"
                 android:layout_centerHorizontal = "true" />
 
@@ -97,7 +97,7 @@
                 android:layout_width = "wrap_content"
                 android:layout_height = "wrap_content"
                 android:layout_below = "@+id/powersaver_tv_charge_remain"
-                android:layout_marginTop = "@dimen/powersaver_dimen_icon_margin_top"
+                android:layout_marginTop = "35dp"
                 android:layout_marginLeft = "20dp"
                 android:layout_marginRight = "20dp"
                 android:layout_centerHorizontal = "true"

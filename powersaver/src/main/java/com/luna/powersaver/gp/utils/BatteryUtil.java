@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
-import android.util.Log;
 
 /**
  * Created by zsigui on 17-1-9.
@@ -42,11 +41,9 @@ public class BatteryUtil {
             sChargeOneInMillis = SPUtil.getInt(context, SP_FILE, SP_CHARGE_KEY, -1);
         }
         int percent = getPercent(context);
-        Log.d("test", "calculateRemainTime: sLastPercent = " + sLastPercent + ", percent = " + percent
-         + ", sChargeOneInMillis = " + sChargeOneInMillis + ", sLastTime = " + sLastTimeInMillis);
-        if (sLastPercent == 0) {
-            sLastPercent = percent;
-        } else if (percent > sLastPercent && sLastTimeInMillis != 0) {
+        if (sLastTimeInMillis == 0) {
+            sLastTimeInMillis = System.currentTimeMillis();
+        } if (sLastPercent != 0 && percent > sLastPercent && sLastTimeInMillis != 0) {
             int diffPercent = percent - sLastPercent;
             long diffTimeInMillis = System.currentTimeMillis() - sLastTimeInMillis;
             int charge = (int) (diffTimeInMillis / diffPercent);
@@ -54,10 +51,9 @@ public class BatteryUtil {
                 sChargeOneInMillis = charge;
                 SPUtil.putInt(context, SP_FILE, SP_CHARGE_KEY, charge);
             }
-            sLastPercent = percent;
+            sLastTimeInMillis = System.currentTimeMillis();
         }
-
-        sLastTimeInMillis = System.currentTimeMillis();
+        sLastPercent = percent;
 
         if (sChargeOneInMillis > 0) {
             return sChargeOneInMillis * (100 - percent);
@@ -84,9 +80,10 @@ public class BatteryUtil {
 
     public static int getChargeState(Context context) {
         int percent = getPercent(context);
-        if (percent < 10 || percent > 95) {
+        if (percent == 100) {
             return STATE_TRICKLE;
-        } else if (percent > 80) {
+        } else if (percent > 90) {
+            // 腾讯该处定义为90，网上查询有说明80的
             return STATE_CONTINUOUS;
         } else {
             return STATE_QUICK;

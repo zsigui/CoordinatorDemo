@@ -14,7 +14,6 @@
     <!-- progress -->
     <dimen name = "powersaver_dimen_progress_diameter" >170dp</dimen >
     <dimen name = "powersaver_dimen_progress_margin_top" >60dp</dimen >
-    <dimen name = "powersaver_dimen_pb_text" >40sp</dimen >
     <dimen name = "powersaver_dimen_progress_tv_margin_top" >10dp</dimen >
     <dimen name = "powersaver_dimen_progress_remain_text" >14sp</dimen >
 
