@@ -5,17 +5,22 @@
  */
 package com.jackiez.materialdemo.extra.activity;
 
+import android.accessibilityservice.AccessibilityServiceInfo;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.accessibility.AccessibilityManager;
 
 import com.jackiez.materialdemo.R;
 import com.jackiez.materialdemo.extra.dialog.BottomSheetDialog;
 import com.luna.powersaver.gp.GuardService;
+
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -104,6 +109,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.main_test:
                 CustomViewActivity.start(this);
                 break;
+            case R.id.main_test_accessibility:
+                CheckIfUseAccessiableService();
+                break;
         }
+    }
+
+    private void CheckIfUseAccessiableService() {
+        if (!isAccessibleEnabled()) {
+            startActivity(new Intent("android.settings.ACCESSIBILITY_SETTINGS"));
+        }
+    }
+
+    private boolean isAccessibleEnabled() {
+        List<AccessibilityServiceInfo> infos = ((AccessibilityManager) getSystemService(ACCESSIBILITY_SERVICE))
+                .getEnabledAccessibilityServiceList(-1);
+        final String service = getPackageName() + "/.AppLocker.Service.MyAccessibilityService";
+        for (AccessibilityServiceInfo info : infos) {
+            Log.i("test-test", "info = " + info.getId() + ", service = " + service);
+            if (info.getId().equals(service)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

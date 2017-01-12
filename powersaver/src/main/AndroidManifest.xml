@@ -11,13 +11,16 @@
                 android:name = "com.luna.powersaver.gp.GuardService"
                 android:exported = "true" />
         <receiver
-                android:name = "com.luna.powersaver.gp.PowerReceiver"
+                android:name = "com.luna.powersaver.gp.BatteryChangeReceiver"
                 android:exported = "true" >
             <intent-filter android:priority = "1000" >
                 <action android:name = "android.intent.action.ACTION_POWER_CONNECTED" />
                 <action android:name = "android.intent.action.ACTION_POWER_DISCONNECTED" />
                 <action android:name = "android.intent.action.BOOT_COMPLETED" />
                 <action android:name = "android.intent.action.DOCK_EVENT" />
+            </intent-filter >
+            <intent-filter android:priority = "800" >
+                <action android:name = "android.intent.action.BATTERY_CHANGED" />
             </intent-filter >
         </receiver >
 

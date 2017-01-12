@@ -3,6 +3,7 @@
     <string name = "powersaver_st_continuous_charge">Continuous charge</string>
     <string name = "powersaver_st_trickle_charge">Trickle charge</string>
     <string name = "powersaver_st_unlock">Slide to unlock >></string>
+    <string name = "powersaver_st_charge_full">Power is full and now in trickle-charge</string>
     <string name = "powersaver_st_charge_remain">
         <![CDATA[
             Charging time remaining <font color="#a6d4ff">%s</font>

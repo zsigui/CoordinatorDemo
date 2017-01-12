@@ -4,13 +4,13 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.FrameLayout;
-import android.widget.Scroller;
 
 /**
  * @author JackieZhuang
@@ -20,6 +20,7 @@ import android.widget.Scroller;
 
 public class SwipeBackView extends FrameLayout {
     private static final int MIN_SLOP = 15;
+    private final static int COMPUTE_VELOCITY_UNIT = 100;
 
     public SwipeBackView(Context context) {
         this(context, null);
@@ -32,7 +33,6 @@ public class SwipeBackView extends FrameLayout {
     public SwipeBackView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         setBackgroundColor(Color.BLACK);
-        mScroller = new Scroller(context);
     }
 
     private View child;
@@ -58,12 +58,10 @@ public class SwipeBackView extends FrameLayout {
         }
     };
     private boolean mIsDrag;
-    private Scroller mScroller;
     private VelocityTracker mTracker;
     private float mCurTranslateX;
     private float mTotalTranslateX;
     private ObjectAnimator mAnimator;
-    private ObjectAnimator mFlingAnimator;
 
     private float mDownX, mDownY, mLastX;
 
@@ -95,12 +93,16 @@ public class SwipeBackView extends FrameLayout {
     }
 
     @Override
-    public boolean onInterceptTouchEvent(MotionEvent ev) {
-        mScroller.abortAnimation();
+    public boolean dispatchTouchEvent(MotionEvent ev) {
         if (mAnimator != null) {
             mAnimator.cancel();
             mAnimator = null;
         }
+        return super.dispatchTouchEvent(ev);
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (child == null) {
             return super.onInterceptTouchEvent(ev);
         }
@@ -137,11 +139,6 @@ public class SwipeBackView extends FrameLayout {
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        mScroller.abortAnimation();
-        if (mAnimator != null) {
-            mAnimator.cancel();
-            mAnimator = null;
-        }
         if (child == null) {
             return super.onTouchEvent(ev);
         }
@@ -184,18 +181,17 @@ public class SwipeBackView extends FrameLayout {
 //                    mNestListener.onFinishSwipe();
 //                } else {
 //                    createTrackerIfNotExist();
-//                    mTracker.addMovement(ev);
-//                    mTracker.computeCurrentVelocity(COMPUTE_VELOCITY_UNIT, 1500);
 //                    handleFlingAnimator(mCurTranslateX, mTotalTranslateX, mTracker.getXVelocity());
 //                }
+                mTracker.addMovement(ev);
+                mTracker.computeCurrentVelocity(COMPUTE_VELOCITY_UNIT, 1500);
+                handleSwipeAnimator(mTracker.getXVelocity());
                 clearTrackerIfExist();
-                handleSwipeAnimator();
                 break;
         }
         return true;
     }
 
-//    private final static int COMPUTE_VELOCITY_UNIT = 100;
 //    private final static int DECREASE_VELOCITY_RATE = 200;
 //
 //    private void handleFlingAnimator(float startX, float maxX, float xVelocity) {
@@ -238,7 +234,7 @@ public class SwipeBackView extends FrameLayout {
 //        }
 //    }
 
-    private void handleSwipeAnimator() {
+    private void handleSwipeAnimator(float xVelocity) {
         // 不需要执行动画了
         if (mCurTranslateX == 0) {
             mNestListener.onSwipe(0);
@@ -246,7 +242,8 @@ public class SwipeBackView extends FrameLayout {
             mNestListener.onFinishSwipe();
         } else {
             // 需要执行动画
-            if (mCurTranslateX / mTotalTranslateX > 0.5f) {
+            if (mCurTranslateX / mTotalTranslateX > 0.5f
+                    || (xVelocity > 0 && mCurTranslateX + xVelocity > 0.5f * mTotalTranslateX)) {
                 // 执行滑动动画画出屏幕
                 mAnimator = ObjectAnimator.ofFloat(child, "translateX", mCurTranslateX, mTotalTranslateX);
             } else {
@@ -277,6 +274,9 @@ public class SwipeBackView extends FrameLayout {
                     }
                 }
             });
+            if(Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                mAnimator.setAutoCancel(true);
+            }
             mAnimator.start();
         }
     }

@@ -13,7 +13,7 @@ import android.view.WindowManager;
 import android.widget.CheckedTextView;
 import android.widget.TextView;
 
-import com.luna.powersaver.gp.utils.BatteryUtil;
+import com.luna.powersaver.gp.manager.BatteryTimeManager;
 import com.luna.powersaver.gp.utils.DateUtil;
 import com.luna.powersaver.gp.utils.ViewUtil;
 import com.luna.powersaver.gp.view.CircleProgressView;
@@ -39,16 +39,10 @@ public class ViewManager {
     private Handler mHandler = new Handler();
     class UpdateRunnable implements Runnable {
 
-        private Context mContext;
         private WeakReference<ViewManager> mReference;
 
-        public UpdateRunnable(Context context, ViewManager vm) {
-            mContext = context.getApplicationContext();
-            mReference = new WeakReference<ViewManager>(vm);
-        }
-
-        public void setReference(ViewManager vm) {
-            mReference = new WeakReference<ViewManager>(vm);
+        UpdateRunnable(ViewManager vm) {
+            mReference = new WeakReference<>(vm);
         }
 
         @Override
@@ -58,30 +52,36 @@ public class ViewManager {
             }
             ViewManager vm = mReference.get();
             if (vm.mViewHolder != null) {
-                vm.mViewHolder.bindData(mContext);
+                vm.mViewHolder.bindData(StaticConst.sContext);
                 vm.mHandler.postDelayed(this, UPDATE_INTERVAL);
             }
         }
     }
 
-    public void showGuard(Context context) {
-        if (mContentView == null) {
+    /**
+     * 显示充电屏保，会首先调用 hideLastGuard()
+     */
+    public void showGuardForce(Context context, boolean isScreenOn) {
+        hideLastGuard(context);
+        showNewGuard(context, isScreenOn);
+    }
+
+    /**
+     * 显示充电屏保，重复调用会显示多个充电屏保
+     */
+    public void showNewGuard(Context context, boolean isScreenOn) {
+//        if (mContentView == null) {
             WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            WindowManager.LayoutParams lp = generateLayoutParam();
+            WindowManager.LayoutParams lp = generateLayoutParam(isScreenOn);
             initView(context);
             wm.addView(mContentView, lp);
-        }
+//        }
     }
 
-    public void destroyView() {
-        mContentView = null;
-        if (mViewHolder != null) {
-            mViewHolder.contentView = null;
-            mViewHolder = null;
-        }
-    }
-
-    public void hideGuard(Context context) {
+    /**
+     * 关闭调用 showNewGuard() 显示的最后一个充电屏保
+     */
+    public void hideLastGuard(Context context) {
         if (mContentView != null) {
             WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
             wm.removeView(mContentView);
@@ -89,11 +89,19 @@ public class ViewManager {
         }
     }
 
-    private void initView(final Context context) {
+    private void destroyView() {
+        mContentView = null;
+        if (mViewHolder != null) {
+            mViewHolder.contentView = null;
+            mViewHolder = null;
+        }
+    }
+
+    private void initView(Context context) {
         mViewHolder = new ViewHolder(context);
         mContentView = (SwipeBackView) mViewHolder.contentView;
         mViewHolder.bindData(context);
-        mHandler.postDelayed(new UpdateRunnable(context, this), UPDATE_INTERVAL);
+        mHandler.postDelayed(new UpdateRunnable(this), UPDATE_INTERVAL);
         mContentView.setListener(new SwipeBackView.SwipeBackListener() {
             @Override
             public void onSwipe(float offset) {
@@ -102,27 +110,31 @@ public class ViewManager {
 
             @Override
             public void onFinishSwipe() {
-                hideGuard(context);
+                hideLastGuard(StaticConst.sContext);
             }
         });
     }
 
-    private WindowManager.LayoutParams generateLayoutParam() {
+    private WindowManager.LayoutParams generateLayoutParam(boolean isScreenOn) {
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
         );
         lp.format = PixelFormat.RGBA_8888;
-        lp.flags = WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
-                | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                | WindowManager.LayoutParams.FLAG_FULLSCREEN
-                | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-                | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
-//        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN) {
-//            lp.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN;
-//        } else {
-//            lp.systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-//        }
+        if (isScreenOn) {
+            lp.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                    | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                    | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                    | WindowManager.LayoutParams.FLAG_FULLSCREEN
+                    | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                    | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
+        } else {
+            lp.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                    | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                    | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                    | WindowManager.LayoutParams.FLAG_FULLSCREEN
+                    | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
+        }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
             // 4.4 以下要覆盖需要申请弹窗权限，因为其下 toast 不支持触摸事件
             lp.type = WindowManager.LayoutParams.TYPE_PHONE;
@@ -175,17 +187,22 @@ public class ViewManager {
             tvTime.setText(time[0]);
             tvWeek.setText(time[1]);
             tvDate.setText(time[2]);
-            pb.setPercent(BatteryUtil.getPercent(context));
-            long remain = BatteryUtil.calculateRemainTime(context);
-            String s = (remain == -1 ? "calculating" : DateUtil.formatTime(remain));
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
-                tvRemain.setText(Html.fromHtml(String.format(context.getString(R.string.powersaver_st_charge_remain),
-                        s), Html.FROM_HTML_MODE_LEGACY));
+            pb.setPercent(BatteryTimeManager.get().getPercent());
+            long remain = BatteryTimeManager.get().calculateChargeTime();
+            if (remain == 0) {
+                tvRemain.setText(context.getString(R.string.powersaver_st_charge_full));
             } else {
-                tvRemain.setText(Html.fromHtml(String.format(context.getString(R.string.powersaver_st_charge_remain),
-                        s)));
+                String s = DateUtil.formatTime(remain);
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+                    tvRemain.setText(Html.fromHtml(String.format(
+                            context.getString(R.string.powersaver_st_charge_remain), s),
+                            Html.FROM_HTML_MODE_LEGACY));
+                } else {
+                    tvRemain.setText(Html.fromHtml(String.format(
+                            context.getString(R.string.powersaver_st_charge_remain), s)));
+                }
             }
-            int checkedIndex = BatteryUtil.getChargeState(context);
+            int checkedIndex = BatteryTimeManager.get().getChargeState();
             for (int i = 0; i < ctv.length; i++) {
                 ctv[i].setChecked(i == checkedIndex);
             }

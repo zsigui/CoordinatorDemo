@@ -9,7 +9,7 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.luna.powersaver.gp.utils.BatteryUtil;
+import com.luna.powersaver.gp.manager.BatteryTimeManager;
 
 /**
  * Created by zsigui on 17-1-9.
@@ -19,6 +19,13 @@ public class GuardService extends Service {
 
     public static boolean sIsRunningThisService = false;
 
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        StaticConst.sContext = getApplicationContext();
+        Log.d("ps-test", "onBind:GuardService is onCreate!");
+    }
 
     @Nullable
     @Override
@@ -32,8 +39,8 @@ public class GuardService extends Service {
         sIsRunningThisService = true;
         sendWakeUpClock();
         Log.d("ps-test", "onStartCommand:GuardService is Running!");
-        if (BatteryUtil.isCharging(this)) {
-            ViewManager.get().showGuard(this);
+        if (BatteryTimeManager.get().isCharging()) {
+            ViewManager.get().showGuardForce(this, false);
         }
         return super.onStartCommand(intent, flags, startId);
     }
