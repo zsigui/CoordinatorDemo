@@ -5,6 +5,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -18,13 +19,20 @@ import com.luna.powersaver.gp.manager.BatteryTimeManager;
 public class GuardService extends Service {
 
     public static boolean sIsRunningThisService = false;
-
+    private BatteryEventReceiver mReceiver;
 
     @Override
     public void onCreate() {
         super.onCreate();
         StaticConst.sContext = getApplicationContext();
         Log.d("ps-test", "onBind:GuardService is onCreate!");
+        mReceiver = new BatteryEventReceiver();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_BATTERY_CHANGED);
+        filter.addAction(Intent.ACTION_POWER_CONNECTED);
+        filter.addAction(Intent.ACTION_POWER_DISCONNECTED);
+        filter.addAction(Intent.ACTION_SCREEN_ON);
+        registerReceiver(mReceiver, filter);
     }
 
     @Nullable
@@ -40,7 +48,7 @@ public class GuardService extends Service {
         sendWakeUpClock();
         Log.d("ps-test", "onStartCommand:GuardService is Running!");
         if (BatteryTimeManager.get().isCharging()) {
-            ViewManager.get().showGuardForce(this, false);
+            PowerSaver.get().showGuardView(this);
         }
         return super.onStartCommand(intent, flags, startId);
     }
@@ -48,6 +56,7 @@ public class GuardService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        unregisterReceiver(mReceiver);
         sIsRunningThisService = false;
         testAliveAndCreateIfNot(this);
     }

@@ -1,3 +1,4 @@
-include ':app', ':fragmentation_swipeback', ':fragmentation', ':powersaver'
-project(':fragmentation_swipeback').projectDir = new File('libraries/Fragmentation/fragmentation_swipeback')
-project(':fragmentation').projectDir = new File('libraries/Fragmentation/fragmentation')
+include ':app', ':powersaver'
+//include ':app', ':fragmentation_swipeback', ':fragmentation', ':powersaver'
+//project(':fragmentation_swipeback').projectDir = new File('libraries/Fragmentation/fragmentation_swipeback')
+//project(':fragmentation').projectDir = new File('libraries/Fragmentation/fragmentation')

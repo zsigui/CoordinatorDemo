@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.main_fragment_shareelement).setOnClickListener(this);
         findViewById(R.id.main_animation_scene).setOnClickListener(this);
         findViewById(R.id.main_test).setOnClickListener(this);
+        findViewById(R.id.main_test_accessibility).setOnClickListener(this);
     }
 
     @Override
@@ -117,6 +118,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void CheckIfUseAccessiableService() {
         if (!isAccessibleEnabled()) {
+            Log.d("test-test", "need to jump accessibility");
             startActivity(new Intent("android.settings.ACCESSIBILITY_SETTINGS"));
         }
     }
@@ -124,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean isAccessibleEnabled() {
         List<AccessibilityServiceInfo> infos = ((AccessibilityManager) getSystemService(ACCESSIBILITY_SERVICE))
                 .getEnabledAccessibilityServiceList(-1);
-        final String service = getPackageName() + "/.AppLocker.Service.MyAccessibilityService";
+        final String service = getPackageName() + "/.extra.service.NBAccessibilityService";
         for (AccessibilityServiceInfo info : infos) {
             Log.i("test-test", "info = " + info.getId() + ", service = " + service);
             if (info.getId().equals(service)) {

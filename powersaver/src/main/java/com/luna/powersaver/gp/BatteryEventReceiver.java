@@ -13,7 +13,7 @@ import com.luna.powersaver.gp.manager.SPManager;
  * Created by zsigui on 17-1-12.
  */
 
-public class BatteryChangeReceiver extends BroadcastReceiver {
+public class BatteryEventReceiver extends BroadcastReceiver {
 
     public static int sCurrentPercent = -1;
     public static int sCurrentPlug = -1;
@@ -30,20 +30,21 @@ public class BatteryChangeReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        Log.d(TAG, "PowerReceiver receive!");
         if (context == null || intent == null)
             return;
         GuardService.testAliveAndCreateIfNot(context);
 
-        Log.d(TAG, "PowerReceiver receive! = " + intent.getAction());
-        if (Intent.ACTION_POWER_CONNECTED.equals(intent.getAction())) {
-            if (BatteryTimeManager.get().isCharging()) {
-                // 显示屏幕保护
-                ViewManager.get().showNewGuard(context, false);
-            }
+        if (Intent.ACTION_POWER_CONNECTED.equals(intent.getAction())
+                || Intent.ACTION_SCREEN_ON.equals(intent.getAction())) {
+
+            // 显示屏幕保护
+            PowerSaver.get().showGuardView(context);
+
         } else if (Intent.ACTION_POWER_DISCONNECTED.equals(intent.getAction())) {
 
             // 关闭屏幕保护
-            ViewManager.get().hideLastGuard(context);
+            PowerSaver.get().hideGuardView(context);
 
         } else if (Intent.ACTION_BATTERY_CHANGED.equals(intent.getAction())) {
             // 电量变换中，进行监听判断

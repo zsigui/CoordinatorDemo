@@ -25,15 +25,15 @@ import java.lang.ref.WeakReference;
  * Created by zsigui on 17-1-9.
  */
 
-public class ViewManager {
+class ViewManager {
 
     private static ViewManager sInstance = new ViewManager();
 
-    public static ViewManager get() {
+    static ViewManager get() {
         return sInstance;
     }
 
-    public static final int UPDATE_INTERVAL = 1000;
+    private static final int UPDATE_INTERVAL = 1000;
     private SwipeBackView mContentView;
     private ViewHolder mViewHolder;
     private Handler mHandler = new Handler();
@@ -59,34 +59,36 @@ public class ViewManager {
     }
 
     /**
-     * 显示充电屏保，会首先调用 hideLastGuard()
+     * 显示充电屏保
+     * @return 如果是首次创建并且创建完成，返回true，否则返回false
      */
-    public void showGuardForce(Context context, boolean isScreenOn) {
-        hideLastGuard(context);
-        showNewGuard(context, isScreenOn);
-    }
-
-    /**
-     * 显示充电屏保，重复调用会显示多个充电屏保
-     */
-    public void showNewGuard(Context context, boolean isScreenOn) {
-//        if (mContentView == null) {
+    boolean showGuardView(Context context, boolean isScreenOn, boolean isFocusable) {
+        if (mContentView == null) {
             WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            WindowManager.LayoutParams lp = generateLayoutParam(isScreenOn);
+            WindowManager.LayoutParams lp = generateLayoutParam(isScreenOn, isFocusable);
             initView(context);
             wm.addView(mContentView, lp);
-//        }
+            return true;
+        }
+        return false;
     }
 
     /**
-     * 关闭调用 showNewGuard() 显示的最后一个充电屏保
+     * 隐藏充电屏保
+     * @return 如果成功关闭已存在屏保，返回true，否则返回false
      */
-    public void hideLastGuard(Context context) {
+    boolean hideGuardView(Context context) {
         if (mContentView != null) {
             WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
             wm.removeView(mContentView);
             destroyView();
+            return true;
         }
+        return false;
+    }
+
+    boolean isGuardViewShown() {
+        return mContentView != null;
     }
 
     private void destroyView() {
@@ -104,36 +106,30 @@ public class ViewManager {
         mHandler.postDelayed(new UpdateRunnable(this), UPDATE_INTERVAL);
         mContentView.setListener(new SwipeBackView.SwipeBackListener() {
             @Override
-            public void onSwipe(float offset) {
-
-            }
+            public void onSwipe(float offset) {}
 
             @Override
             public void onFinishSwipe() {
-                hideLastGuard(StaticConst.sContext);
+                PowerSaver.get().hideGuardView(StaticConst.sContext);
             }
         });
     }
 
-    private WindowManager.LayoutParams generateLayoutParam(boolean isScreenOn) {
+    private WindowManager.LayoutParams generateLayoutParam(boolean isScreenOn, boolean isFocusable) {
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
         );
         lp.format = PixelFormat.RGBA_8888;
+        lp.flags = WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                | WindowManager.LayoutParams.FLAG_FULLSCREEN
+                | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
+        if (!isFocusable) {
+            lp.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+        }
         if (isScreenOn) {
-            lp.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                    | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
-                    | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                    | WindowManager.LayoutParams.FLAG_FULLSCREEN
-                    | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-                    | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
-        } else {
-            lp.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                    | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
-                    | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                    | WindowManager.LayoutParams.FLAG_FULLSCREEN
-                    | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
+            lp.flags |= WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
             // 4.4 以下要覆盖需要申请弹窗权限，因为其下 toast 不支持触摸事件

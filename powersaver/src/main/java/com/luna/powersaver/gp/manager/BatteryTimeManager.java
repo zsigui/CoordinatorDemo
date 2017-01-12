@@ -5,7 +5,7 @@ import android.content.IntentFilter;
 import android.os.BatteryManager;
 import android.util.Log;
 
-import com.luna.powersaver.gp.BatteryChangeReceiver;
+import com.luna.powersaver.gp.BatteryEventReceiver;
 import com.luna.powersaver.gp.StaticConst;
 
 /**
@@ -32,9 +32,9 @@ public class BatteryTimeManager {
     }
 
     private BatteryTimeManager() {
-        Log.d("ps-test", "currentPercent = " + BatteryChangeReceiver.sCurrentPercent);
-        if (BatteryChangeReceiver.sCurrentPercent == -1
-                || BatteryChangeReceiver.sCurrentPlug == -1) {
+        Log.d("ps-test", "currentPercent = " + BatteryEventReceiver.sCurrentPercent);
+        if (BatteryEventReceiver.sCurrentPercent == -1
+                || BatteryEventReceiver.sCurrentPlug == -1) {
             initCurrentPercentAndPlug();
         }
     }
@@ -43,16 +43,16 @@ public class BatteryTimeManager {
         long chargeSpeed = SPManager.get(StaticConst.sContext).getRealChargeSpeed();
         if (chargeSpeed == 0) {
             chargeSpeed = calculateChargeSpeedByPercentAndPlug(
-                    BatteryChangeReceiver.sCurrentPercent,
-                    BatteryChangeReceiver.sCurrentPlug
+                    BatteryEventReceiver.sCurrentPercent,
+                    BatteryEventReceiver.sCurrentPlug
             );
         }
-        if (BatteryChangeReceiver.sCurrentPercent < LIMIT_QUICK_CHARGE) {
-            return chargeSpeed * ((long) (LIMIT_QUICK_CHARGE - BatteryChangeReceiver.sCurrentPercent))
-                    + calculateChargeSpeedByPlug(BatteryChangeReceiver.sCurrentPlug) * 10;
+        if (BatteryEventReceiver.sCurrentPercent < LIMIT_QUICK_CHARGE) {
+            return chargeSpeed * ((long) (LIMIT_QUICK_CHARGE - BatteryEventReceiver.sCurrentPercent))
+                    + calculateChargeSpeedByPlug(BatteryEventReceiver.sCurrentPlug) * 10;
         }
-        return BatteryChangeReceiver.sCurrentPercent <= LIMIT_CONTINUOUS_CHARGE ?
-                chargeSpeed * ((long) (LIMIT_CONTINUOUS_CHARGE - BatteryChangeReceiver.sCurrentPercent)) : 0;
+        return BatteryEventReceiver.sCurrentPercent <= LIMIT_CONTINUOUS_CHARGE ?
+                chargeSpeed * ((long) (LIMIT_CONTINUOUS_CHARGE - BatteryEventReceiver.sCurrentPercent)) : 0;
     }
 
     public void writeBatteryQuickChargeSpeed(long speed, int percent, int plug) {
@@ -191,31 +191,31 @@ public class BatteryTimeManager {
     }
 
     public int getPercent() {
-        if (BatteryChangeReceiver.sCurrentPercent == -1) {
+        if (BatteryEventReceiver.sCurrentPercent == -1) {
             initCurrentPercentAndPlug();
         }
-        return BatteryChangeReceiver.sCurrentPercent;
+        return BatteryEventReceiver.sCurrentPercent;
     }
 
     public int getPlug() {
-        if (BatteryChangeReceiver.sCurrentPlug == -1) {
+        if (BatteryEventReceiver.sCurrentPlug == -1) {
             initCurrentPercentAndPlug();
         }
-        return BatteryChangeReceiver.sCurrentPlug;
+        return BatteryEventReceiver.sCurrentPlug;
     }
 
     private void initCurrentPercentAndPlug() {
         Intent intent = getBatteryIntent();
-        if (BatteryChangeReceiver.sCurrentPercent == -1) {
+        if (BatteryEventReceiver.sCurrentPercent == -1) {
             int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
             int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
             int percent = level * 100 / scale;
             if (percent > 100)
                 percent = 100;
-            BatteryChangeReceiver.sCurrentPercent = percent;
+            BatteryEventReceiver.sCurrentPercent = percent;
         }
-        if (BatteryChangeReceiver.sCurrentPlug == -1) {
-            BatteryChangeReceiver.sCurrentPlug = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+        if (BatteryEventReceiver.sCurrentPlug == -1) {
+            BatteryEventReceiver.sCurrentPlug = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
         }
     }
 
