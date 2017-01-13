@@ -15,7 +15,6 @@ import android.widget.TextView;
 
 import com.luna.powersaver.gp.manager.BatteryTimeManager;
 import com.luna.powersaver.gp.utils.DateUtil;
-import com.luna.powersaver.gp.utils.ViewUtil;
 import com.luna.powersaver.gp.view.CircleProgressView;
 import com.luna.powersaver.gp.view.SwipeBackView;
 
@@ -126,7 +125,8 @@ class ViewManager {
                 | WindowManager.LayoutParams.FLAG_FULLSCREEN
                 | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
         if (!isFocusable) {
-            lp.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+            lp.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                    | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
         }
         if (isScreenOn) {
             lp.flags |= WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
@@ -173,7 +173,8 @@ class ViewManager {
             ctv[1] = ctvContinuous;
             ctv[2] = ctvTrickle;
             // 设置高斯模糊背景
-            ViewUtil.blur(context, ViewUtil.getCenterCropWallPaper(context), contentView);
+            contentView.setBackgroundResource(android.R.color.transparent);
+//            ViewUtil.blur(context, ViewUtil.getCenterCropWallPaper(context), contentView);
 //            ViewUtil.blur(context, ViewUtil.drawableToBitmap(context.getResources().getDrawable(R.drawable
 //                    .powersaver_default_bg)), contentView);
         }
