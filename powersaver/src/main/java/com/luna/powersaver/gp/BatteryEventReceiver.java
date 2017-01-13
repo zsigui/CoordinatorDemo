@@ -1,5 +1,6 @@
 package com.luna.powersaver.gp;
 
+import android.app.KeyguardManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -36,10 +37,17 @@ public class BatteryEventReceiver extends BroadcastReceiver {
         GuardService.testAliveAndCreateIfNot(context);
 
         if (Intent.ACTION_POWER_CONNECTED.equals(intent.getAction())
-                || Intent.ACTION_SCREEN_ON.equals(intent.getAction())) {
+                || Intent.ACTION_SCREEN_ON.equals(intent.getAction())
+                || Intent.ACTION_SCREEN_OFF.equals(intent.getAction())) {
 
-            // 显示屏幕保护
-            PowerSaver.get().showGuardView(context);
+            if (BatteryTimeManager.get().isCharging()) {
+                closeSystemGuard(context);
+                // 显示屏幕保护
+                PowerSaver.get().showGuardView(context);
+            } else {
+                openSystemGuard(context);
+                PowerSaver.get().hideGuardView(context);
+            }
 
         } else if (Intent.ACTION_POWER_DISCONNECTED.equals(intent.getAction())) {
 
@@ -134,5 +142,17 @@ public class BatteryEventReceiver extends BroadcastReceiver {
 
 
         }
+    }
+
+    private void openSystemGuard(Context context) {
+        KeyguardManager keyguardManager = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+        KeyguardManager.KeyguardLock lock = keyguardManager.newKeyguardLock("");
+        lock.reenableKeyguard();
+    }
+
+    private void closeSystemGuard(Context context) {
+        KeyguardManager keyguardManager = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+        KeyguardManager.KeyguardLock lock = keyguardManager.newKeyguardLock("");
+        lock.disableKeyguard();
     }
 }

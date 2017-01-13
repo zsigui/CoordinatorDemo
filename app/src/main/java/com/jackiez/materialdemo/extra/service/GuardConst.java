@@ -7,4 +7,5 @@ package com.jackiez.materialdemo.extra.service;
 public class GuardConst {
 
     public static final String SUPER_CLEANER = "com.turboc.cleaner";
+    public static final String SYSTEM_UI = "com.android.systemui";
 }

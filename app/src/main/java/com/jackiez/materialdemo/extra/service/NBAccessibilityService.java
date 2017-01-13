@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -17,6 +18,7 @@ import android.widget.Toast;
 
 import com.luna.powersaver.gp.PowerSaver;
 
+import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -57,6 +59,8 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
+        if (event == null || event.getPackageName() == null)
+            return;
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA);
         Log.w(TAG, "onAccessibilityEvent is called! type = " + event.getEventType()
                 + ", action = " + event.getAction() + ", time = " + df.format(new Date(event.getEventTime()))
@@ -68,6 +72,7 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
 //        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
 //            finalWindowStateChangeEvent = event;
 //        }
+
         if (sIsInWork) {
             // 先进行18及以上处理，18以下待适配
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1) {
@@ -76,6 +81,13 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                         && getRootInActiveWindow() != null) {
                     Log.d(TAG, "当前顶端是锁屏，进行右滑");
                     performGlobalAction(AccessibilityService.GESTURE_SWIPE_RIGHT);
+                    return;
+                } else if (GuardConst.SYSTEM_UI.equals(event.getPackageName().toString())) {
+                    Log.d(TAG, "当前顶端是系统锁，进行上滑");
+                    if (getRootInActiveWindow() != null) {
+                        getRootInActiveWindow().performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+                    }
+                    return;
                 }
 
                 if (sCurrentWorkState == 2) {
@@ -103,8 +115,8 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                             Log.d(TAG, "通知栏变化是由于下载通知引起的，则说明执行下载了，修改状态为监听下载");
                             sCurrentWorkState = 1;
                             // 判断当前上次变化是否处于GP中，是则执行退出
-                            if (finalWindowStateChangeEvent != null && GPResId.PACKAGE.equals
-                                    (finalWindowStateChangeEvent.getPackageName().toString())) {
+                            if (finalWindowStateChangeEvent != null && finalWindowStateChangeEvent.getPackageName() != null
+                                    && GPResId.PACKAGE.equals(finalWindowStateChangeEvent.getPackageName().toString())) {
 
                                 // 处于GP，执行后退
                                 Log.d(TAG, "工作页面尚处于GP中，执行退出");
@@ -124,6 +136,13 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                                 sCurrentWorkState = 4;
                                 // 可以进行下一个任务操作，此处直接设置为工作结束
                                 sIsInWork = false;
+                                mHandler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Log.d(TAG, "跳转应用信息界面，准备删除该应用");
+                                        jumpAppDetailSetting(NBAccessibilityService.this, TEST_PACKAGE_NAME);
+                                    }
+                                }, 5000);
                             }
                         }
                     }
@@ -132,8 +151,8 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                         || event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
                     if (event.getPackageName() != null && GPResId.PACKAGE.equals(event.getPackageName())) {
                         Log.d(TAG, "现在正处于GP中，进行检测操作，sCurrentWorkState = " + sCurrentWorkState);
-                        if (getRootInActiveWindow() != null) {
-                            AccessibilityNodeInfo source = getRootInActiveWindow();
+                        AccessibilityNodeInfo source = getRootInActiveWindow();
+                        if (source != null) {
                             List<AccessibilityNodeInfo> nodes;
                             if (sCurrentWorkState == 0) {
                                 Log.d(TAG, "判断是否处于应用详情页，然后进行下一步操作");
@@ -207,7 +226,8 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                             } else if (sCurrentWorkState == 1) {
                                 // 当前正在监听下载
                                 Log.d(TAG, "非通知栏事件，监测下载中，现在要监测任务是否完成");
-                                if (event.getText() != null && event.getText().contains(TEST_APP_NAME)
+                                if (event.getText() != null && event.getText().size() > 0 && event.getText().get(0) != null
+                                        && event.getText().get(0).toString().contains(TEST_APP_NAME)
                                         && GPResId.PACKAGE.equals(event.getPackageName().toString())) {
                                     // 当前正在安装或者已经安装完成，判断app是否安装
                                     Log.d(TAG, "非通知栏事件，当前正在安装或者已经安装完成，判断app是否安装");
@@ -216,6 +236,13 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                                         sCurrentWorkState = 4;
                                         // 可以进行下一个任务操作，此处直接设置为工作结束
                                         sIsInWork = false;
+                                        mHandler.postDelayed(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Log.d(TAG, "跳转应用信息界面，准备删除该应用");
+                                                jumpAppDetailSetting(NBAccessibilityService.this, TEST_PACKAGE_NAME);
+                                            }
+                                        }, 5000);
                                     }
                                 }
                             } else if (sCurrentWorkState == 3) {
@@ -247,6 +274,13 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
         }
     }
 
+    private void jumpAppDetailSetting(Context context, String packgeName) {
+        Uri packageURI = Uri.parse("package:" + packgeName);
+        Intent intent =  new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,packageURI);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+    }
+
     private boolean travsalToFindFirstInfoContainsName(AccessibilityNodeInfo info, String widgetName) {
         if (info == null)
             return false;
@@ -263,18 +297,14 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
     }
 
     private boolean isPkgInstalled(String pkgName) {
-        PackageInfo packageInfo = null;
+        PackageInfo packageInfo;
         try {
             packageInfo = this.getPackageManager().getPackageInfo(pkgName, 0);
         } catch (PackageManager.NameNotFoundException e) {
             packageInfo = null;
             e.printStackTrace();
         }
-        if (packageInfo == null) {
-            return false;
-        } else {
-            return true;
-        }
+        return packageInfo != null;
     }
 
     private void performGlobalBack() {
@@ -334,18 +364,29 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
     }
 
 
-    private Handler mHandler = new Handler() {
+    private Handler mHandler = new DownloadHanlder(NBAccessibilityService.this);
+    static class DownloadHanlder extends Handler {
+
+        WeakReference<NBAccessibilityService> mReference;
+
+        public DownloadHanlder(NBAccessibilityService service) {
+            mReference = new WeakReference<NBAccessibilityService>(service);
+        }
+
         @Override
         public void handleMessage(Message msg) {
+            if (mReference == null || mReference.get() == null)
+                return;
+            final NBAccessibilityService service = mReference.get();
             switch (msg.what) {
                 case 0:
                     Log.d(TAG, "接收到网络请求，进行下载事件，此处模拟包名: " + TEST_PACKAGE_NAME);
                     Log.d(TAG, "延迟" + JUDGE_WORK_INTERVAL + "秒执行GP下载操作");
 //                    toast("接收到网络请求，进行下载事件，此处模拟包名：" + TEST_PACKAGE_NAME);
-                    mHandler.postDelayed(new Runnable() {
+                    postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            mHandler.sendEmptyMessage(1);
+                            sendEmptyMessage(1);
                         }
                     }, JUDGE_WORK_INTERVAL);
                     break;
@@ -354,17 +395,17 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
 //                    toast("判断当前是否还处于屏保并执行任务");
                     if (PowerSaver.get().isGuardViewShown()) {
                         Log.d(TAG, "当前处于屏保中，可以执行GP任务了");
-                        if (!isPkgInstalled(TEST_PACKAGE_NAME)) {
+                        if (!service.isPkgInstalled(TEST_PACKAGE_NAME)) {
                             Log.d(TAG, "判断该应用未存在，跳转GP安装应用");
                             // 设置状态
                             sIsInWork = true;
                             sCurrentWorkState = 0;
                             // 跳转对应GP位置
-                            jumpToStore(NBAccessibilityService.this, TEST_PACKAGE_NAME);
-                            mHandler.postDelayed(new Runnable() {
+                            service.jumpToStore(service.getApplicationContext(), TEST_PACKAGE_NAME);
+                            postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
-                                    performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
+                                    service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
 
                                 }
                             }, 5000);
