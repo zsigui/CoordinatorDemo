@@ -2,15 +2,19 @@ package com.jackiez.materialdemo.extra.service;
 
 import android.accessibilityservice.AccessibilityService;
 import android.annotation.TargetApi;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -67,72 +71,260 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                 + ", text = " + event.getText() + ", package = " + event.getPackageName()
                 + ", source.text = " + (event.getSource() != null ? event.getSource().getText() : "null")
                 + ", isWork = " + sIsInWork);
-        traveselNodeInfo(getRootInActiveWindow(), 0);
+//        traveselNodeInfo(getRootInActiveWindow(), 0);
 
 //        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
 //            finalWindowStateChangeEvent = event;
 //        }
 
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1) {
+
+            if (GPResId.PACKAGE.equals(event.getPackageName().toString())) {
+                AccessibilityNodeInfo source = getRootInActiveWindow();
+                List<AccessibilityNodeInfo> nodes;
+                AccessibilityNodeInfo info;
+                if (source != null) {
+                    if (sCurrentWorkState == 0) {
+                        // 还没有获取输入搜索
+                        nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getSearchIdleId());
+                        Log.w(TAG, "查找搜索输入按钮，进行点击操作获取焦点: " + nodes);
+                        if (nodes != null && nodes.size() > 0) {
+                            info = nodes.get(0);
+                            if (info != null) {
+                                boolean isClick = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                                Log.w(TAG, "对搜索进行点击获取焦点 " + isClick);
+                                if (isClick) {
+                                    sCurrentWorkState = 1;
+                                }
+                            }
+                        }
+
+                    } else if (sCurrentWorkState == 1) {
+                        nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getSearchInputId());
+                        Log.w(TAG, "查找搜索输入文本框");
+                        if (nodes != null && nodes.size() > 0) {
+                            info = nodes.get(0);
+                            Log.w(TAG, "找到搜索输入文本框");
+                            if (info != null && info.isEditable()) {
+                                Log.w(TAG, "进行内容设置");
+                                setText(info, TEST_APP_NAME);
+                                sCurrentWorkState = 2;
+                            }
+                        }
+                    } else if (sCurrentWorkState == 2) {
+//                        traveselNodeInfo(getRootInActiveWindow(), 0);
+                        nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getSearchSuggestionId());
+                        Log.d(TAG, "查找建议列表弹窗");
+                        if (nodes != null && nodes.size() > 0) {
+                            Log.d(TAG, "获取到建议列表弹窗，进行遍历查找符合项");
+                            info = nodes.get(0);
+                            nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getSearchSuggestItemTextId());
+                            Log.d(TAG, "查找到建议列表项文本ID节点列表： " + nodes);
+                            if (nodes != null && nodes.size() > 0) {
+                                for (int i = 0; i < nodes.size(); i++) {
+                                    info = nodes.get(i);
+                                    Log.d(TAG, "该项的值：" + (info != null ? info.getText() : "none"));
+                                    if (info != null && info.getText() != null
+                                            && TEST_APP_NAME.equals(info.getText().toString())) {
+                                        Log.d(TAG, "查找到名称相同的指定项，获取其父节点进行点击!");
+                                        if (info.getParent() != null ) {
+                                            boolean result = info.getParent().performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                                            Log.d(TAG, "点击了查找到的项: 结果: " + result);
+                                            if (result) {
+                                                sCurrentWorkState = 0;
+                                            }
+                                        }
+                                        return;
+                                    }
+                                }
+                            }
+                            traveselNodeInfo(info, 0);
+                        }
+                    }
+                }
+            }
+        }
         if (sIsInWork) {
             // 先进行18及以上处理，18以下待适配
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1) {
+//                handleDownloadWork(event);
+            }
+        }
+    }
 
-                if (GuardConst.SUPER_CLEANER.equals(event.getPackageName().toString())
-                        && getRootInActiveWindow() != null) {
-                    Log.d(TAG, "当前顶端是锁屏，进行右滑");
-                    performGlobalAction(AccessibilityService.GESTURE_SWIPE_RIGHT);
-                    return;
-                } else if (GuardConst.SYSTEM_UI.equals(event.getPackageName().toString())) {
-                    Log.d(TAG, "当前顶端是系统锁，进行上滑");
-                    if (getRootInActiveWindow() != null) {
-                        getRootInActiveWindow().performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
-                    }
-                    return;
-                }
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    private void setText(AccessibilityNodeInfo info, String msg) {
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP) {
+            Bundle args = new Bundle();
+            args.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, msg);
+            info.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args);
+        } else {
+            ClipData data = ClipData.newPlainText("data", msg);
+            ClipboardManager cm = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+            cm.setPrimaryClip(data);
+            info.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+            info.performAction(AccessibilityNodeInfo.ACTION_PASTE);
+        }
+    }
 
-                if (sCurrentWorkState == 2) {
-                    // 清除痕迹，所以要判断是否商店并退出
-                    Log.d(TAG, "清除痕迹，所以要判断是否商店并退出");
-                    if (finalWindowStateChangeEvent != null && GPResId.PACKAGE.equals
-                            (finalWindowStateChangeEvent.getPackageName().toString())) {
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    private void handleDownloadWork(AccessibilityEvent event) {
+        if (GuardConst.SUPER_CLEANER.equals(event.getPackageName().toString())
+                && getRootInActiveWindow() != null) {
+            Log.d(TAG, "当前顶端是锁屏，进行右滑");
+            performGlobalAction(AccessibilityService.GESTURE_SWIPE_RIGHT);
+            return;
+        } else if (GuardConst.SYSTEM_UI.equals(event.getPackageName().toString())) {
+            Log.d(TAG, "当前顶端是系统锁，进行上滑");
+            if (getRootInActiveWindow() != null) {
+                getRootInActiveWindow().performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+            }
+            return;
+        }
+
+        if (sCurrentWorkState == 2) {
+            // 清除痕迹，所以要判断是否商店并退出
+            Log.d(TAG, "清除痕迹，所以要判断是否商店并退出");
+            if (finalWindowStateChangeEvent != null && GPResId.PACKAGE.equals
+                    (finalWindowStateChangeEvent.getPackageName().toString())) {
+
+                // 处于GP，执行后退
+                Log.d(TAG, "工作页面尚处于GP中，执行退出");
+                performGlobalBack();
+            }
+            return;
+        }
+        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            finalWindowStateChangeEvent = event;
+        }
+        if (event.getEventType() == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED) {
+            Log.d(TAG, "状态栏发生变化了！！");
+            if (sCurrentWorkState == 3) {
+                Log.d(TAG, "当前是点击安装之后引起的状态栏变化，判断是否由于下载引起");
+                // 通知栏发生变化了
+                if (DownloadResId.PACKAGE.equals(event.getPackageName().toString())) {
+                    // 下载引起的变化，说明是下载中
+                    Log.d(TAG, "通知栏变化是由于下载通知引起的，则说明执行下载了，修改状态为监听下载");
+                    sCurrentWorkState = 1;
+                    // 判断当前上次变化是否处于GP中，是则执行退出
+                    if (finalWindowStateChangeEvent != null && finalWindowStateChangeEvent.getPackageName() != null
+                            && GPResId.PACKAGE.equals(finalWindowStateChangeEvent.getPackageName().toString())) {
 
                         // 处于GP，执行后退
                         Log.d(TAG, "工作页面尚处于GP中，执行退出");
                         performGlobalBack();
                     }
-                    return;
                 }
-                if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-                    finalWindowStateChangeEvent = event;
+            } else if (sCurrentWorkState == 1) {
+                Log.d(TAG, "监测下载中，现在要监测任务是否完成：" + event.getText()
+                        + (event.getPackageName()) + ", ");
+                if (event.getText() != null && event.getText().size() > 0 && event.getText().get(0) != null
+                        && event.getText().get(0).toString().contains(TEST_APP_NAME)
+                        && GPResId.PACKAGE.equals(event.getPackageName().toString())) {
+                    // 当前正在安装或者已经安装完成，判断app是否安装
+                    Log.d(TAG, "当前正在安装或者已经安装完成，判断app是否安装");
+                    if (isPkgInstalled(TEST_PACKAGE_NAME)) {
+                        Log.d(TAG, "应用已经安装，修改工作状态");
+                        sCurrentWorkState = 4;
+                        // 可以进行下一个任务操作，此处直接设置为工作结束
+                        sIsInWork = false;
+                        mHandler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                Log.d(TAG, "跳转应用信息界面，准备删除该应用");
+                                jumpAppDetailSetting(NBAccessibilityService.this, TEST_PACKAGE_NAME);
+                            }
+                        }, 5000);
+                    }
                 }
-                if (event.getEventType() == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED) {
-                    Log.d(TAG, "状态栏发生变化了！！");
-                    if (sCurrentWorkState == 3) {
-                        Log.d(TAG, "当前是点击安装之后引起的状态栏变化，判断是否由于下载引起");
-                        // 通知栏发生变化了
-                        if (DownloadResId.PACKAGE.equals(event.getPackageName().toString())) {
-                            // 下载引起的变化，说明是下载中
-                            Log.d(TAG, "通知栏变化是由于下载通知引起的，则说明执行下载了，修改状态为监听下载");
-                            sCurrentWorkState = 1;
-                            // 判断当前上次变化是否处于GP中，是则执行退出
-                            if (finalWindowStateChangeEvent != null && finalWindowStateChangeEvent.getPackageName() != null
-                                    && GPResId.PACKAGE.equals(finalWindowStateChangeEvent.getPackageName().toString())) {
+            }
+        }
+        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
+                || event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            if (event.getPackageName() != null && GPResId.PACKAGE.equals(event.getPackageName())) {
+                Log.d(TAG, "现在正处于GP中，进行检测操作，sCurrentWorkState = " + sCurrentWorkState);
+                AccessibilityNodeInfo source = getRootInActiveWindow();
+                if (source != null) {
+                    List<AccessibilityNodeInfo> nodes;
+                    if (sCurrentWorkState == 0) {
+                        Log.d(TAG, "判断是否处于应用详情页，然后进行下一步操作");
+                        nodes = source.findAccessibilityNodeInfosByViewId(GPResId
+                                .getTitleId());
+                        if (nodes != null && nodes.size() > 0 && nodes.get(0) != null) {
+                            Log.d(TAG, "当前处于应用详情页界面，查询处理Title: " + nodes.get(0).getText());
+                            Log.d(TAG, "当前处于应用详情页界面，首先判断是否有接收按钮");
+                            nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getContinueBarId());
+                            AccessibilityNodeInfo info;
+                            if (nodes != null && nodes.size() > 0) {
+                                Log.d(TAG, "找到继续按钮的界面，查找继续的确认按钮");
+                                nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getContinueBtnId());
+                                if (nodes != null && nodes.size() > 0) {
+                                    info = nodes.get(0);
+                                    boolean result = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                                    Log.d(TAG, "找到继续安装按钮，执行安装程序! class = " + info.getClassName() + ", " +
+                                            "isClickable = " + info.isClickable()
+                                            + ", click result = " + result);
+                                    if (result) {
+                                        // 执行成功，退出GP
+                                        sCurrentWorkState = 1;
+                                        performGlobalBack();
+                                    }
+                                }
+                            } else {
+                                nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getInstallBtnResId());
 
-                                // 处于GP，执行后退
-                                Log.d(TAG, "工作页面尚处于GP中，执行退出");
-                                performGlobalBack();
+                                if (nodes != null && nodes.size() > 0) {
+                                    info = nodes.get(0);
+                                    boolean result = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                                    Log.d(TAG, "找到安装按钮，执行安装程序! class = " + info.getClassName() + ", " +
+                                            "isClickable =" +
+
+                                            " " + info.isClickable()
+
+                                            + ", click result = " + result);
+                                    if (result) {
+                                        // 需要监测是否有继续栏了
+                                        sCurrentWorkState = 3;
+                                        finalWindowStateChangeEvent = event;
+                                    }
+                                } else {
+                                    Log.d(TAG, "查找不到安装按钮，看是否有卸载按钮！");
+//                                    nodes = source.findAccessibilityNodeInfosByViewId(P_GOOGLE_PLAY +
+// ":id/uninstall");
+//                                    if (nodes != null && nodes.size() > 0) {
+//                                        Log.d(TAG, "卸载按钮查找成功，该包已经安装完成，执行退出GP操作");
+//                                        performGlobalBack();
+//                                    } else {
+//                                        Log.d(TAG, "查找不到卸载按钮，默认当前处于安装状态，暂不执行其他操作");
+//                                    }
+                                }
+                            }
+                        } else {
+                            Log.d(TAG, "当前不处于应用详情页界面，判断是否加载中");
+                            if (!travsalToFindFirstInfoContainsName(source, "ProgressBar")) {
+                                Log.d(TAG, "当前不处于加载中，重新跳转");
+//                                        mHandler.postDelayed(new Runnable() {
+//                                            @Override
+//                                            public void run() {
+//                                                if (sIsInWork) {
+//                                                    jumpToStore(NBAccessibilityService.this, TEST_PACKAGE_NAME);
+//                                                }
+//                                            }
+//                                        }, 2000);
+                            } else {
+                                Log.d(TAG, "当前在加载中，需要等待！");
                             }
                         }
                     } else if (sCurrentWorkState == 1) {
-                        Log.d(TAG, "监测下载中，现在要监测任务是否完成：" + event.getText()
-                         + (event.getPackageName()) + ", ");
+                        // 当前正在监听下载
+                        Log.d(TAG, "非通知栏事件，监测下载中，现在要监测任务是否完成");
                         if (event.getText() != null && event.getText().size() > 0 && event.getText().get(0) != null
                                 && event.getText().get(0).toString().contains(TEST_APP_NAME)
                                 && GPResId.PACKAGE.equals(event.getPackageName().toString())) {
                             // 当前正在安装或者已经安装完成，判断app是否安装
-                            Log.d(TAG, "当前正在安装或者已经安装完成，判断app是否安装");
+                            Log.d(TAG, "非通知栏事件，当前正在安装或者已经安装完成，判断app是否安装");
                             if (isPkgInstalled(TEST_PACKAGE_NAME)) {
-                                Log.d(TAG, "应用已经安装，修改工作状态");
+                                Log.d(TAG, "非通知栏事件，应用已经安装，修改工作状态");
                                 sCurrentWorkState = 4;
                                 // 可以进行下一个任务操作，此处直接设置为工作结束
                                 sIsInWork = false;
@@ -145,130 +337,28 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                                 }, 5000);
                             }
                         }
-                    }
-                }
-                if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
-                        || event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-                    if (event.getPackageName() != null && GPResId.PACKAGE.equals(event.getPackageName())) {
-                        Log.d(TAG, "现在正处于GP中，进行检测操作，sCurrentWorkState = " + sCurrentWorkState);
-                        AccessibilityNodeInfo source = getRootInActiveWindow();
-                        if (source != null) {
-                            List<AccessibilityNodeInfo> nodes;
-                            if (sCurrentWorkState == 0) {
-                                Log.d(TAG, "判断是否处于应用详情页，然后进行下一步操作");
-                                nodes = source.findAccessibilityNodeInfosByViewId(GPResId
-                                        .getTitleId());
-                                if (nodes != null && nodes.size() > 0 && nodes.get(0) != null) {
-                                    Log.d(TAG, "当前处于应用详情页界面，查询处理Title: " + nodes.get(0).getText());
-                                    Log.d(TAG, "当前处于应用详情页界面，首先判断是否有接收按钮");
-                                    nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getContinueBarId());
-                                    AccessibilityNodeInfo info;
-                                    if (nodes != null && nodes.size() > 0) {
-                                        Log.d(TAG, "找到继续按钮的界面，查找继续的确认按钮");
-                                        nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getContinueBtnId());
-                                        if (nodes != null && nodes.size() > 0) {
-                                            info = nodes.get(0);
-                                            boolean result = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                                            Log.d(TAG, "找到继续安装按钮，执行安装程序! class = " + info.getClassName() + ", " +
-                                                    "isClickable = " + info.isClickable()
-                                                    + ", click result = " + result);
-                                            if (result) {
-                                                // 执行成功，退出GP
-                                                sCurrentWorkState = 1;
-                                                performGlobalBack();
-                                            }
-                                        }
-                                    } else {
-                                        nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getInstallBtnResId());
-
-                                        if (nodes != null && nodes.size() > 0) {
-                                            info = nodes.get(0);
-                                            boolean result = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                                            Log.d(TAG, "找到安装按钮，执行安装程序! class = " + info.getClassName() + ", " +
-                                                    "isClickable =" +
-
-                                                    " " + info.isClickable()
-
-                                                    + ", click result = " + result);
-                                            if (result) {
-                                                // 需要监测是否有继续栏了
-                                                sCurrentWorkState = 3;
-                                                finalWindowStateChangeEvent = event;
-                                            }
-                                        } else {
-                                            Log.d(TAG, "查找不到安装按钮，看是否有卸载按钮！");
-//                                    nodes = source.findAccessibilityNodeInfosByViewId(P_GOOGLE_PLAY +
-// ":id/uninstall");
-//                                    if (nodes != null && nodes.size() > 0) {
-//                                        Log.d(TAG, "卸载按钮查找成功，该包已经安装完成，执行退出GP操作");
-//                                        performGlobalBack();
-//                                    } else {
-//                                        Log.d(TAG, "查找不到卸载按钮，默认当前处于安装状态，暂不执行其他操作");
-//                                    }
-                                        }
-                                    }
-                                } else {
-                                    Log.d(TAG, "当前不处于应用详情页界面，判断是否加载中");
-                                    if (!travsalToFindFirstInfoContainsName(source, "ProgressBar")) {
-                                        Log.d(TAG, "当前不处于加载中，重新跳转");
-//                                        mHandler.postDelayed(new Runnable() {
-//                                            @Override
-//                                            public void run() {
-//                                                if (sIsInWork) {
-//                                                    jumpToStore(NBAccessibilityService.this, TEST_PACKAGE_NAME);
-//                                                }
-//                                            }
-//                                        }, 2000);
-                                    } else {
-                                        Log.d(TAG, "当前在加载中，需要等待！");
-                                    }
-                                }
-                            } else if (sCurrentWorkState == 1) {
-                                // 当前正在监听下载
-                                Log.d(TAG, "非通知栏事件，监测下载中，现在要监测任务是否完成");
-                                if (event.getText() != null && event.getText().size() > 0 && event.getText().get(0) != null
-                                        && event.getText().get(0).toString().contains(TEST_APP_NAME)
-                                        && GPResId.PACKAGE.equals(event.getPackageName().toString())) {
-                                    // 当前正在安装或者已经安装完成，判断app是否安装
-                                    Log.d(TAG, "非通知栏事件，当前正在安装或者已经安装完成，判断app是否安装");
-                                    if (isPkgInstalled(TEST_PACKAGE_NAME)) {
-                                        Log.d(TAG, "非通知栏事件，应用已经安装，修改工作状态");
-                                        sCurrentWorkState = 4;
-                                        // 可以进行下一个任务操作，此处直接设置为工作结束
-                                        sIsInWork = false;
-                                        mHandler.postDelayed(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                Log.d(TAG, "跳转应用信息界面，准备删除该应用");
-                                                jumpAppDetailSetting(NBAccessibilityService.this, TEST_PACKAGE_NAME);
-                                            }
-                                        }, 5000);
-                                    }
-                                }
-                            } else if (sCurrentWorkState == 3) {
-                                nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getContinueBarId());
-                                Log.d(TAG, "当前处于应用详情页界面，工作状态3，判断是否有继续按钮： " + nodes);
-                                AccessibilityNodeInfo info;
-                                if (nodes != null && nodes.size() > 0) {
-                                    nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getContinueBtnId());
-                                    Log.d(TAG, "找到继续按钮的界面，查找继续的确认按钮" + nodes);
-                                    if (nodes != null && nodes.size() > 0) {
-                                        info = nodes.get(0);
-                                        boolean result = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                                        Log.d(TAG, "找到继续安装按钮，执行安装程序! class = " + info.getClassName() + ", " +
-                                                "isClickable = " + info.isClickable()
-                                                + ", click result = " + result);
-                                        if (result) {
-                                            // 执行成功，退出GP
-                                            sCurrentWorkState = 1;
-                                            performGlobalBack();
-                                        }
-                                    }
+                    } else if (sCurrentWorkState == 3) {
+                        nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getContinueBarId());
+                        Log.d(TAG, "当前处于应用详情页界面，工作状态3，判断是否有继续按钮： " + nodes);
+                        AccessibilityNodeInfo info;
+                        if (nodes != null && nodes.size() > 0) {
+                            nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getContinueBtnId());
+                            Log.d(TAG, "找到继续按钮的界面，查找继续的确认按钮" + nodes);
+                            if (nodes != null && nodes.size() > 0) {
+                                info = nodes.get(0);
+                                boolean result = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                                Log.d(TAG, "找到继续安装按钮，执行安装程序! class = " + info.getClassName() + ", " +
+                                        "isClickable = " + info.isClickable()
+                                        + ", click result = " + result);
+                                if (result) {
+                                    // 执行成功，退出GP
+                                    sCurrentWorkState = 1;
+                                    performGlobalBack();
                                 }
                             }
-
                         }
                     }
+
                 }
             }
         }
@@ -276,7 +366,7 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
 
     private void jumpAppDetailSetting(Context context, String packgeName) {
         Uri packageURI = Uri.parse("package:" + packgeName);
-        Intent intent =  new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,packageURI);
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, packageURI);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
     }
@@ -365,6 +455,7 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
 
 
     private Handler mHandler = new DownloadHanlder(NBAccessibilityService.this);
+
     static class DownloadHanlder extends Handler {
 
         WeakReference<NBAccessibilityService> mReference;
@@ -402,13 +493,6 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                             sCurrentWorkState = 0;
                             // 跳转对应GP位置
                             service.jumpToStore(service.getApplicationContext(), TEST_PACKAGE_NAME);
-                            postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
-
-                                }
-                            }, 5000);
                         } else {
                             Log.d(TAG, "该应用已经存在，暂不处理");
                         }
@@ -416,12 +500,14 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                     break;
             }
         }
-    };
+    }
+
+    ;
 
     public boolean jumpToStore(Context context, String packageName) {
         if (context == null)
             return false;
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(GPResId.getWakeAction() + packageName));
+        Intent intent = new Intent();
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.setClassName(GPResId.PACKAGE, GPResId.getMainActivityClassName());
         if (intent.resolveActivity(context.getPackageManager()) != null) {

@@ -1,6 +1,5 @@
 package com.luna.powersaver.gp;
 
-import android.app.KeyguardManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +8,7 @@ import android.util.Log;
 
 import com.luna.powersaver.gp.manager.BatteryTimeManager;
 import com.luna.powersaver.gp.manager.SPManager;
+import com.luna.powersaver.gp.utils.GuardUtil;
 
 /**
  * Created by zsigui on 17-1-12.
@@ -40,12 +40,12 @@ public class BatteryEventReceiver extends BroadcastReceiver {
                 || Intent.ACTION_SCREEN_ON.equals(intent.getAction())
                 || Intent.ACTION_SCREEN_OFF.equals(intent.getAction())) {
 
+            GuardUtil.closeSystemGuard(context);
             if (BatteryTimeManager.get().isCharging()) {
-                closeSystemGuard(context);
                 // 显示屏幕保护
                 PowerSaver.get().showGuardView(context);
             } else {
-                openSystemGuard(context);
+//                GuardUtil.openSystemGuard(context);
                 PowerSaver.get().hideGuardView(context);
             }
 
@@ -144,15 +144,4 @@ public class BatteryEventReceiver extends BroadcastReceiver {
         }
     }
 
-    private void openSystemGuard(Context context) {
-        KeyguardManager keyguardManager = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
-        KeyguardManager.KeyguardLock lock = keyguardManager.newKeyguardLock("");
-        lock.reenableKeyguard();
-    }
-
-    private void closeSystemGuard(Context context) {
-        KeyguardManager keyguardManager = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
-        KeyguardManager.KeyguardLock lock = keyguardManager.newKeyguardLock("");
-        lock.disableKeyguard();
-    }
 }

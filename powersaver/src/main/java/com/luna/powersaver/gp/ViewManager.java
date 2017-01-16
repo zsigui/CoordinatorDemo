@@ -36,6 +36,7 @@ class ViewManager {
     private SwipeBackView mContentView;
     private ViewHolder mViewHolder;
     private Handler mHandler = new Handler();
+
     class UpdateRunnable implements Runnable {
 
         private WeakReference<ViewManager> mReference;
@@ -59,6 +60,7 @@ class ViewManager {
 
     /**
      * 显示充电屏保
+     *
      * @return 如果是首次创建并且创建完成，返回true，否则返回false
      */
     boolean showGuardView(Context context, boolean isScreenOn, boolean isFocusable) {
@@ -74,6 +76,7 @@ class ViewManager {
 
     /**
      * 隐藏充电屏保
+     *
      * @return 如果成功关闭已存在屏保，返回true，否则返回false
      */
     boolean hideGuardView(Context context) {
@@ -105,7 +108,8 @@ class ViewManager {
         mHandler.postDelayed(new UpdateRunnable(this), UPDATE_INTERVAL);
         mContentView.setListener(new SwipeBackView.SwipeBackListener() {
             @Override
-            public void onSwipe(float offset) {}
+            public void onSwipe(float offset) {
+            }
 
             @Override
             public void onFinishSwipe() {
@@ -123,7 +127,8 @@ class ViewManager {
         lp.flags = WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
                 | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                 | WindowManager.LayoutParams.FLAG_FULLSCREEN
-                | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
+                | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+                | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD;
         if (!isFocusable) {
             lp.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                     | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
@@ -141,7 +146,7 @@ class ViewManager {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
             lp.systemUiVisibility = View.INVISIBLE;
         } else {
-            lp.systemUiVisibility =  View.INVISIBLE;
+            lp.systemUiVisibility = View.INVISIBLE;
         }
         return lp;
     }

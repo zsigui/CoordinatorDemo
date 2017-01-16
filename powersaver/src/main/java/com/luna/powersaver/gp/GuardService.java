@@ -11,6 +11,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.luna.powersaver.gp.manager.BatteryTimeManager;
+import com.luna.powersaver.gp.utils.GuardUtil;
 
 /**
  * Created by zsigui on 17-1-9.
@@ -34,6 +35,7 @@ public class GuardService extends Service {
         filter.addAction(Intent.ACTION_SCREEN_ON);
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         registerReceiver(mReceiver, filter);
+        GuardUtil.closeSystemGuard(this);
     }
 
     @Nullable

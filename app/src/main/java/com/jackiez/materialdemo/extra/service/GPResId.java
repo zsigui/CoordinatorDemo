@@ -56,4 +56,20 @@ public class GPResId {
     public static String getWakeAction() {
         return "market://details?id=";
     }
+
+    public static String getSearchIdleId() {
+        return PACKAGE + ":id/search_box_idle_text";
+    }
+
+    public static String getSearchInputId() {
+        return PACKAGE + ":id/search_box_text_input";
+    }
+
+    public static String getSearchSuggestionId() {
+        return PACKAGE + ":id/play_search_suggestions_list";
+    }
+
+    public static String getSearchSuggestItemTextId() {
+        return PACKAGE + ":id/suggest_text";
+    }
 }

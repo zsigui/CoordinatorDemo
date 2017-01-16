@@ -3,7 +3,7 @@
 
     <uses-permission android:name = "android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name = "android.permission.RECEIVE_BOOT_COMPLETED" />
-    <!-- 拦截系统锁屏 -->
+    <!-- 拦截系统锁屏,通过WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD无效 -->
     <uses-permission android:name = "android.permission.DISABLE_KEYGUARD" />
 
     <application
