@@ -24,7 +24,7 @@ public class AppDebugLog {
 
     public static final String TAG_UTIL = TAG_PREFIX + "util";
 
-    public static final String TAG_DEBUG_INFO = TAG_PREFIX + "info";
+    public static final String TAG_STALKER = TAG_PREFIX + "info";
 
     public static final String TAG_NET = TAG_PREFIX + "net";
 
@@ -48,7 +48,7 @@ public class AppDebugLog {
 
     public static void v() {
         if (AppDebugLog.IS_DEBUG) {
-            SGLog.v(STACKTRACE_INDEX, AppDebugLog.TAG_DEBUG_INFO);
+            SGLog.v(STACKTRACE_INDEX, AppDebugLog.TAG_STALKER);
         }
     }
 
@@ -60,7 +60,7 @@ public class AppDebugLog {
 
     public static void d(Object object) {
         if (AppDebugLog.IS_DEBUG) {
-            SGLog.d(STACKTRACE_INDEX, AppDebugLog.TAG_DEBUG_INFO, object);
+            SGLog.d(STACKTRACE_INDEX, AppDebugLog.TAG_STALKER, object);
         }
     }
 
@@ -72,7 +72,7 @@ public class AppDebugLog {
 
     public static void e(Object object) {
         if (AppDebugLog.IS_DEBUG) {
-            SGLog.e(STACKTRACE_INDEX, AppDebugLog.TAG_DEBUG_INFO, object);
+            SGLog.e(STACKTRACE_INDEX, AppDebugLog.TAG_STALKER, object);
         }
     }
 
@@ -84,7 +84,7 @@ public class AppDebugLog {
 
     public static void file(Context context, Object object) {
         if (AppDebugLog.IS_DEBUG && AppDebugLog.IS_FILE_DEBUG) {
-            SGLog.file(context, STACKTRACE_INDEX, AppDebugLog.TAG_DEBUG_INFO, null, null, object);
+            SGLog.file(context, STACKTRACE_INDEX, AppDebugLog.TAG_STALKER, null, null, object);
         }
     }
 

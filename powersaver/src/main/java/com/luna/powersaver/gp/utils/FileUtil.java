@@ -286,4 +286,12 @@ public class FileUtil {
             }
         }
     }
+
+    public static void writeData(File storeFile, String data, boolean isAppend) {
+
+    }
+
+    public static String readData(File storeFile) {
+        return "";
+    }
 }

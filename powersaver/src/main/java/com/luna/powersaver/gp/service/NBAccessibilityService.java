@@ -39,13 +39,13 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
 
     private static final String TAG = "acs-test";
     private static final int JUDGE_WORK_INTERVAL = 1000;
-    public static final String TEST_PACKAGE_NAME = "com.luna.applocker.gp";
-    public static final String TEST_APP_NAME = "Migo Applocker";
+//    public static final String TEST_PACKAGE_NAME = "com.luna.applocker.gp";
+//    public static final String TEST_APP_NAME = "Migo Applocker";
 
     // 该状态表明当前是否正处于完成任务状态
     public static boolean sIsInWork = false;
     // 0 需要检查 1 监听下载中 2 清除痕迹 3 检查是还有权限说明还是可以继续下载了 4 完成任务
-    private static int sCurrentWorkState = TYPE.IGNORED;
+    private static int sCurrentWorkState = 0;
 
     public interface TYPE {
         int IGNORED = 0;
@@ -54,9 +54,11 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
         int INSTALL_MANUALLY = 3;
         int OPEN_MANUALLY = 4;
         int UNINSTALL_MANUALLY = 5;
+        int CLEAR = 10;
     }
+
     // 0 处理GP下载 1 处理GP搜索 2 处理手动安装 3 处理程序打开 4 处理手动卸载
-    public static int sCurrentWorkType = 0;
+    public static int sCurrentWorkType = TYPE.IGNORED;
     // 接收到的最后一次窗口状态变化的事件
     public AccessibilityEvent finalWindowStateChangeEvent;
 
@@ -98,7 +100,13 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
         if (sIsInWork) {
             // 先进行18及以上处理，18以下待适配
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                if (TextUtils.isEmpty(TEST_PACKAGE_NAME)) {
+                if (sCurrentWorkType == TYPE.CLEAR) {
+                    // 关闭屏幕
+                    handleClearWork(event);
+                    return;
+                }
+                if (StalkerManager.get().pCurrentWorkInfo != null
+                        && TextUtils.isEmpty(StalkerManager.get().pCurrentWorkInfo.pkg)) {
                     return;
                 }
                 switch (sCurrentWorkType) {
@@ -123,21 +131,36 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    private void handleClearWork(AccessibilityEvent event) {
+        String pkg = event.getPackageName().toString();
+        if (GPResId.INSTALLER_PKG.equals(pkg)
+                || GPResId.PACKAGE.equals(pkg)
+                || GPResId.NOTIFY_DOWNLOAD_PKG.equals(pkg)
+                || (StalkerManager.get().pCurrentWorkInfo != null
+                && pkg.equals(StalkerManager.get().pCurrentWorkInfo.pkg))) {
+            AppInfoUtil.jumpToHome(StaticConst.sContext);
+            sIsInWork = false;
+        }
+        // 保存当前任务状态
+        StalkerManager.get().saveCurrentTask();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void handleInstallWork(AccessibilityEvent event) {
         if (GPResId.INSTALLER_PKG.equals(event.getPackageName().toString())) {
             AppDebugLog.w(TAG, "当前检测到Installer的执行，处于安装行为中");
             AccessibilityNodeInfo source = getRootInActiveWindow();
             List<AccessibilityNodeInfo> nodes;
             if (source != null) {
-                nodes =  source.findAccessibilityNodeInfosByViewId(GPResId.getInstalledDoneBtnId());
+                nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getInstallOkBtnId());
                 AccessibilityNodeInfo info;
                 if (nodes != null && nodes.size() > 0) {
                     info = nodes.get(0);
                     if (info != null) {
                         boolean isClick = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
                         AppDebugLog.w(TAG, "确定安装，执行结果： " + isClick);
-                        if (isClick) {
-                            StalkerManager.get().doContinueAfterUninstall();
+                        if (!isClick) {
+                            performGlobalBack();
                         }
                     }
                 } else {
@@ -169,7 +192,7 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
             AccessibilityNodeInfo source = getRootInActiveWindow();
             List<AccessibilityNodeInfo> nodes;
             if (source != null) {
-                nodes =  source.findAccessibilityNodeInfosByViewId(GPResId.getUninstallOkBtnId());
+                nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getUninstallOkBtnId());
                 AccessibilityNodeInfo info;
                 if (nodes != null && nodes.size() > 0) {
                     info = nodes.get(0);
@@ -215,7 +238,7 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                         AppDebugLog.w(TAG, "找到搜索输入文本框");
                         if (info != null && info.isEditable()) {
                             AppDebugLog.w(TAG, "进行内容设置");
-                            setText(info, TEST_APP_NAME);
+                            setText(info, StalkerManager.get().pCurrentWorkInfo.appname);
                             sCurrentWorkState = 2;
                         }
                     }
@@ -233,9 +256,9 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                                 info = nodes.get(i);
                                 AppDebugLog.d(TAG, "该项的值：" + (info != null ? info.getText() : "none"));
                                 if (info != null && info.getText() != null
-                                        && TEST_APP_NAME.equals(info.getText().toString())) {
+                                        && StalkerManager.get().pCurrentWorkInfo.appname.equals(info.getText().toString())) {
                                     AppDebugLog.d(TAG, "查找到名称相同的指定项，获取其父节点进行点击!");
-                                    if (info.getParent() != null ) {
+                                    if (info.getParent() != null) {
                                         boolean result = info.getParent().performAction(AccessibilityNodeInfo.ACTION_CLICK);
                                         AppDebugLog.d(TAG, "点击了查找到的项: 结果: " + result);
                                         if (result) {
@@ -263,9 +286,9 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                             for (int i = 0; i < nodes.size(); i++) {
                                 info = nodes.get(i);
                                 if (info != null && info.getText() != null
-                                        && TEST_APP_NAME.equals(info.getText().toString())) {
+                                        && StalkerManager.get().pCurrentWorkInfo.appname.equals(info.getText().toString())) {
                                     AppDebugLog.d(TAG, "查找到名称相同的指定项，获取其父节点进行点击!");
-                                    if (info.getParent() != null ) {
+                                    if (info.getParent() != null) {
                                         boolean result = info.getParent().performAction(AccessibilityNodeInfo.ACTION_CLICK);
                                         AppDebugLog.d(TAG, "点击了查找到的项: 结果: " + result);
                                         if (result) {
@@ -314,19 +337,19 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
             }
             return;
         }
-
-        if (sCurrentWorkState == 2) {
-            // 清除痕迹，所以要判断是否商店并退出
-            AppDebugLog.d(TAG, "清除痕迹，所以要判断是否商店并退出");
-            if (finalWindowStateChangeEvent != null && GPResId.PACKAGE.equals
-                    (finalWindowStateChangeEvent.getPackageName().toString())) {
-
-                // 处于GP，执行后退
-                AppDebugLog.d(TAG, "工作页面尚处于GP中，执行退出");
-                performGlobalBack();
-            }
-            return;
-        }
+            // 由handleClearWork()进行处理
+//        if (sCurrentWorkState == 2) {
+//            // 清除痕迹，所以要判断是否商店并退出
+//            AppDebugLog.d(TAG, "清除痕迹，所以要判断是否商店并退出");
+//            if (finalWindowStateChangeEvent != null && GPResId.PACKAGE.equals
+//                    (finalWindowStateChangeEvent.getPackageName().toString())) {
+//
+//                // 处于GP，执行后退
+//                AppDebugLog.d(TAG, "工作页面尚处于GP中，执行退出");
+//                performGlobalBack();
+//            }
+//            return;
+//        }
         if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             finalWindowStateChangeEvent = event;
         }
@@ -403,29 +426,20 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                                         finalWindowStateChangeEvent = event;
                                     }
                                 } else {
-                                    AppDebugLog.d(TAG, "查找不到安装按钮，看是否有卸载按钮！");
-//                                    nodes = source.findAccessibilityNodeInfosByViewId(P_GOOGLE_PLAY +
-// ":id/uninstall");
-//                                    if (nodes != null && nodes.size() > 0) {
-//                                        AppDebugLog.d(TAG, "卸载按钮查找成功，该包已经安装完成，执行退出GP操作");
-//                                        performGlobalBack();
-//                                    } else {
-//                                        AppDebugLog.d(TAG, "查找不到卸载按钮，默认当前处于安装状态，暂不执行其他操作");
-//                                    }
+                                    AppDebugLog.d(TAG, "查找不到安装按钮，判断是否已经安装");
+                                    if (AppInfoUtil.isPkgInstalled(this, StalkerManager.get().pCurrentWorkInfo.pkg)) {
+                                        StalkerManager.get().doContinueAfterInstalled();
+                                    } else {
+                                        AppDebugLog.d(TAG, "没有安装，没找到安装按钮，默认安装中，退出GP");
+                                        performGlobalBack();
+                                    }
                                 }
                             }
                         } else {
                             AppDebugLog.d(TAG, "当前不处于应用详情页界面，判断是否加载中");
                             if (!travsalToFindFirstInfoContainsName(source, "ProgressBar")) {
                                 AppDebugLog.d(TAG, "当前不处于加载中，重新跳转");
-//                                        mHandler.postDelayed(new Runnable() {
-//                                            @Override
-//                                            public void run() {
-//                                                if (sIsInWork) {
-//                                                    jumpToStore(NBAccessibilityService.this, TEST_PACKAGE_NAME);
-//                                                }
-//                                            }
-//                                        }, 2000);
+                                performGlobalBack();
                             } else {
                                 AppDebugLog.d(TAG, "当前在加载中，需要等待！");
                             }
@@ -468,12 +482,9 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
         if (GPResId.PACKAGE.equals(event.getPackageName().toString())) {
             // 当前正在安装或者已经安装完成，判断app是否安装
             AppDebugLog.d(TAG, "当前正在安装或者已经安装完成，判断app是否安装");
-            if (AppInfoUtil.isPkgInstalled(this, TEST_PACKAGE_NAME)) {
+            if (AppInfoUtil.isPkgInstalled(this, StalkerManager.get().pCurrentWorkInfo.pkg)) {
                 AppDebugLog.d(TAG, "应用已经安装，修改工作状态");
-                sCurrentWorkState = 4;
-                // 可以进行下一个任务操作，此处直接设置为工作结束
-                sIsInWork = false;
-                StalkerManager.get().fromDownloadingToDownloaded(TEST_PACKAGE_NAME);
+                StalkerManager.get().doContinueAfterInstalled();
             }
         }
     }
@@ -539,13 +550,13 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
     }
 
 
-    private Handler mHandler = new DownloadHanlder(NBAccessibilityService.this);
+    private Handler mHandler = new DownloadHandler(NBAccessibilityService.this);
 
-    static class DownloadHanlder extends Handler {
+    static class DownloadHandler extends Handler {
 
         WeakReference<NBAccessibilityService> mReference;
 
-        public DownloadHanlder(NBAccessibilityService service) {
+        public DownloadHandler(NBAccessibilityService service) {
             mReference = new WeakReference<>(service);
         }
 
@@ -556,7 +567,7 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
             final NBAccessibilityService service = mReference.get();
             switch (msg.what) {
                 case 0:
-                    AppDebugLog.d(TAG, "接收到网络请求，进行下载事件，此处模拟包名: " + TEST_PACKAGE_NAME);
+                    AppDebugLog.d(TAG, "接收到网络请求，进行下载事件，此处模拟包名: " + StalkerManager.get().pCurrentWorkInfo.pkg);
                     AppDebugLog.d(TAG, "延迟" + JUDGE_WORK_INTERVAL + "秒执行GP下载操作");
 //                    toast("接收到网络请求，进行下载事件，此处模拟包名：" + TEST_PACKAGE_NAME);
                     postDelayed(new Runnable() {
@@ -571,13 +582,13 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
 //                    toast("判断当前是否还处于屏保并执行任务");
                     if (PowerSaver.get().isGuardViewShown()) {
                         AppDebugLog.d(TAG, "当前处于屏保中，可以执行GP任务了");
-                        if (!AppInfoUtil.isPkgInstalled(service, TEST_PACKAGE_NAME)) {
+                        if (!AppInfoUtil.isPkgInstalled(service, StalkerManager.get().pCurrentWorkInfo.pkg)) {
                             AppDebugLog.d(TAG, "判断该应用未存在，跳转GP安装应用");
                             // 设置状态
                             sIsInWork = true;
                             sCurrentWorkState = 0;
                             // 跳转对应GP位置
-                            AppInfoUtil.jumpToStore(service.getApplicationContext(), TEST_PACKAGE_NAME);
+                            AppInfoUtil.jumpToStore(service.getApplicationContext(), StalkerManager.get().pCurrentWorkInfo.pkg);
                         } else {
                             AppDebugLog.d(TAG, "该应用已经存在，暂不处理");
                         }
@@ -597,8 +608,8 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
     @Override
     public void onGuardHide() {
         AppDebugLog.d(TAG, "接收到onGuardHide事件，尽量进行扫尾工作");
-        sIsInWork = false;
         finalWindowStateChangeEvent = null;
+        sCurrentWorkType = TYPE.CLEAR;
         DownloadManager.getInstance(StaticConst.sContext).startDownload();
     }
 }

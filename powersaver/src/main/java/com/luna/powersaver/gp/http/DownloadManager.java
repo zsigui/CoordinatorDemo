@@ -48,7 +48,6 @@ public class DownloadManager implements DownloadInfo.DownloadListener{
 
     private String mDirPath;
     private Context mContext;
-    public static final String DOWNLOAD_STORAGE = "/pscache/download";
     /**
      * 是否处于下载中
      */
@@ -62,7 +61,7 @@ public class DownloadManager implements DownloadInfo.DownloadListener{
 
     public static DownloadManager getInstance(Context context) {
         if (mInstance == null) {
-            mInstance = new DownloadManager(context, DOWNLOAD_STORAGE);
+            mInstance = new DownloadManager(context, StaticConst.STORE_DOWNLOAD);
         }
         return mInstance;
     }

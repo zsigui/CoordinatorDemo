@@ -112,6 +112,29 @@ public class JsonUtil {
         return info;
     }
 
+    public static JsonAppInfo convertJsonToJsonAppInfo(String json) {
+        try {
+            JSONObject jObj = new JSONObject(json);
+            return convertJObjToJsonAppInfo(jObj);
+        } catch (JSONException e) {
+            if (AppDebugLog.IS_DEBUG) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    public static String convertJsonAppInfoToJson(JsonAppInfo json) {
+        if (json == null) {
+            return "";
+        }
+        JSONObject jObj = convertJsonAppInfoToJObj(json);
+        if (jObj != null) {
+            return jObj.toString();
+        }
+        return "";
+    }
+
     public static String convertJsonAppInfoMapToJson(HashMap<String, JsonAppInfo> data) {
         JSONArray jsonArray = new JSONArray();
         for (Map.Entry<String, JsonAppInfo> entry : data.entrySet()) {

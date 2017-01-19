@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import com.luna.powersaver.gp.http.bean.DownloadInfo;
 import com.luna.powersaver.gp.manager.StalkerManager;
 
 /**
@@ -12,11 +11,6 @@ import com.luna.powersaver.gp.manager.StalkerManager;
  */
 
 public class PackageInstallReceiver extends BroadcastReceiver{
-
-    /**
-     * 记录当前已经下载好启动安装的应用
-     */
-    public static DownloadInfo sDownloadToInstall;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -26,19 +20,13 @@ public class PackageInstallReceiver extends BroadcastReceiver{
         String action = intent.getAction();
 
         String pkgName = intent.getData().getSchemeSpecificPart();
-        if (Intent.ACTION_PACKAGE_ADDED.equals(action)) {
-//            if (sDownloadToInstall != null && StaticConst.sWaitToInstallMap.containsKey(pkgName)) {
-//                StaticConst.sInstalledMap.put(pkgName, StaticConst.sWaitToInstallMap.remove(pkgName));
-//                DownloadManager.getInstance(context).removeDownload(sDownloadToInstall, true);
-//                sDownloadToInstall = null;
-//            }
-            StalkerManager.get().fromDownloadedToInstalled(pkgName);
-//            AppInfoUtil.install(context, intent.hasFileDescriptors());
-        } else if (Intent.ACTION_PACKAGE_REMOVED.equals(action)) {
-            StalkerManager.get().fromInstalledToFinished(pkgName);
+        if (StalkerManager.get().pCurrentWorkInfo != null
+                && pkgName.equals(StalkerManager.get().pCurrentWorkInfo.pkg)) {
+            if (Intent.ACTION_PACKAGE_ADDED.equals(action)) {
+                StalkerManager.get().doContinueAfterInstalled();
+            } else if (Intent.ACTION_PACKAGE_REMOVED.equals(action)) {
+                StalkerManager.get().doContinueAfterUninstall();
+            }
         }
-//        else if (Intent.ACTION_PACKAGE_REMOVED.equals(action)) {
-//        } else if (Intent.ACTION_PACKAGE_REPLACED.equals(action)) {
-//        }
     }
 }
