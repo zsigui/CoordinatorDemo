@@ -12,6 +12,11 @@ android {
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
+        buildConfigField 'boolean', 'IS_DEBUG', 'true'
+        buildConfigField 'boolean', 'LOG_DEBUG', 'true'
+        buildConfigField 'boolean', 'FILE_DEBUG', 'false'
+        buildConfigField 'String', 'XXTEA_KEY', '"scx91kxf04asdf06"'
+        buildConfigField 'String', 'PROTOCOL_VERSION_CODE', '"1"'
     }
     buildTypes {
         release {
@@ -26,6 +31,6 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    compile 'com.android.support:appcompat-v7:25.1.0'
+    compile 'com.android.support:support-annotations:25.1.0'
     testCompile 'junit:junit:4.12'
 }

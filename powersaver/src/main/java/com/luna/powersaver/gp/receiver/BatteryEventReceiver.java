@@ -1,4 +1,4 @@
-package com.luna.powersaver.gp;
+package com.luna.powersaver.gp.receiver;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -6,8 +6,10 @@ import android.content.Intent;
 import android.os.BatteryManager;
 import android.util.Log;
 
+import com.luna.powersaver.gp.PowerSaver;
 import com.luna.powersaver.gp.manager.BatteryTimeManager;
 import com.luna.powersaver.gp.manager.SPManager;
+import com.luna.powersaver.gp.service.GuardService;
 import com.luna.powersaver.gp.utils.GuardUtil;
 
 /**
@@ -35,7 +37,6 @@ public class BatteryEventReceiver extends BroadcastReceiver {
         if (context == null || intent == null)
             return;
         GuardService.testAliveAndCreateIfNot(context);
-
         if (Intent.ACTION_POWER_CONNECTED.equals(intent.getAction())
                 || Intent.ACTION_SCREEN_ON.equals(intent.getAction())
                 || Intent.ACTION_SCREEN_OFF.equals(intent.getAction())) {

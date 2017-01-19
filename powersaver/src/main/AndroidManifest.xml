@@ -5,21 +5,50 @@
     <uses-permission android:name = "android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- 拦截系统锁屏,通过WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD无效 -->
     <uses-permission android:name = "android.permission.DISABLE_KEYGUARD" />
+    <uses-permission android:name = "android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
             android:supportsRtl = "true" >
 
         <service
-                android:name = "com.luna.powersaver.gp.GuardService"
+                android:name = "com.luna.powersaver.gp.service.GuardService"
                 android:exported = "true" />
+
         <receiver
-                android:name = "com.luna.powersaver.gp.BootReceiver"
-                android:exported = "true" >
+                android:name = "com.luna.powersaver.gp.receiver.BootReceiver" >
             <intent-filter android:priority = "1000" >
                 <action android:name = "android.intent.action.BOOT_COMPLETED" />
             </intent-filter >
+            <intent-filter >
+                <action android:name = "android.net.conn.CONNECTIVITY_CHANGE" />
+                <category android:name = "android.intent.category.DEFAULT" />
+            </intent-filter >
+            <intent-filter>
+                <action android:name="com.luna.powersaver.gp.ACTION_CLOCK" />
+            </intent-filter>
+        </receiver >
+        <receiver
+                android:name = "com.luna.powersaver.gp.receiver.PackageInstallReceiver" >
+            <intent-filter >
+                <action android:name = "android.intent.action.PACKAGE_ADDED" />
+                <action android:name = "android.intent.action.PACKAGE_REPLACED" />
+                <action android:name = "android.intent.action.PACKAGE_REMOVED" />
+
+                <data android:scheme = "package" />
+            </intent-filter >
         </receiver >
 
+        <service
+                android:name = "com.luna.powersaver.gp.service.NBAccessibilityService"
+                android:permission = "android.permission.BIND_ACCESSIBILITY_SERVICE" >
+            <intent-filter >
+                <action android:name = "android.accessibilityservice.AccessibilityService" />
+            </intent-filter >
+            <meta-data
+                    android:name = "android.accessibilityservice"
+                    android:resource = "@xml/powersaver_accessibility_service_config" />
+        </service >
     </application >
 
 </manifest >

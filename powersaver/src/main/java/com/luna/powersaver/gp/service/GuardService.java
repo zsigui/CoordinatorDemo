@@ -1,4 +1,4 @@
-package com.luna.powersaver.gp;
+package com.luna.powersaver.gp.service;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -8,9 +8,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.util.Log;
+import com.luna.powersaver.gp.utils.AppDebugLog;
 
+import com.luna.powersaver.gp.PowerSaver;
+import com.luna.powersaver.gp.common.StaticConst;
 import com.luna.powersaver.gp.manager.BatteryTimeManager;
+import com.luna.powersaver.gp.manager.ClockManager;
+import com.luna.powersaver.gp.receiver.BatteryEventReceiver;
 import com.luna.powersaver.gp.utils.GuardUtil;
 
 /**
@@ -19,14 +23,14 @@ import com.luna.powersaver.gp.utils.GuardUtil;
 
 public class GuardService extends Service {
 
+    private static String TAG = GuardService.class.toString();
     public static boolean sIsRunningThisService = false;
     private BatteryEventReceiver mReceiver;
-
     @Override
     public void onCreate() {
         super.onCreate();
         StaticConst.sContext = getApplicationContext();
-        Log.d("ps-test", "onBind:GuardService is onCreate!");
+        AppDebugLog.d(TAG, "onBind:GuardService is onCreate!");
         mReceiver = new BatteryEventReceiver();
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_BATTERY_CHANGED);
@@ -41,7 +45,7 @@ public class GuardService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d("ps-test", "onBind:GuardService is Running!");
+        AppDebugLog.d(TAG, "onBind:GuardService is Running!");
         return null;
     }
 
@@ -49,10 +53,11 @@ public class GuardService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         sIsRunningThisService = true;
         sendWakeUpClock();
-        Log.d("ps-test", "onStartCommand:GuardService is Running!");
+        AppDebugLog.d(TAG, "onStartCommand:GuardService is Running!");
         if (BatteryTimeManager.get().isCharging()) {
             PowerSaver.get().showGuardView(this);
         }
+        ClockManager.get().startAlarmImmediately(this);
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -86,7 +91,7 @@ public class GuardService extends Service {
     }
 
     public static void testAliveAndCreateIfNot(Context context) {
-        Log.w("test", "testAliveAndCreateIfNot: isRun = " + sIsRunningThisService);
+        AppDebugLog.w("test", "testAliveAndCreateIfNot: isRun = " + sIsRunningThisService);
         if (!sIsRunningThisService) {
             Intent intent = new Intent(context, GuardService.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

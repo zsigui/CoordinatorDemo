@@ -1,4 +1,4 @@
-package com.jackiez.materialdemo.extra.service;
+package com.luna.powersaver.gp.common;
 
 /**
  * Created by zsigui on 17-1-13.
@@ -7,7 +7,10 @@ package com.jackiez.materialdemo.extra.service;
 public class GPResId {
 
     public static final String PACKAGE = "com.android.vending";
+    public static final String NOTIFY_DOWNLOAD_PKG = "com.android.providers.downloads";
+    public static final String INSTALLER_PKG = "com.android.packageinstaller";
 
+    /*-------------------------- 以下部分为 Google Play Store 资源ID ----------------------------*/
     /**
      * 应用详情页：安装按钮
      * @return
@@ -71,5 +74,51 @@ public class GPResId {
 
     public static String getSearchSuggestItemTextId() {
         return PACKAGE + ":id/suggest_text";
+    }
+
+    public static String getSearchResultListId() {
+        return PACKAGE + ":id/search_results_list";
+    }
+
+    public static String getSearchResultListItemTitleId() {
+        return PACKAGE + ":id/li_title";
+    }
+
+    public static String getSearchResultListItemSubTitleId() {
+        return PACKAGE + ":id/li_subtitle";
+    }
+
+    /*-------------------------- 以下部分为 Installer 安装器资源ID ----------------------------*/
+
+    public static String getInstallTitleId() {
+        return INSTALLER_PKG + ":id/app_name";
+    }
+
+    public static String getInstallOkBtnId() {
+        return INSTALLER_PKG + ":id/ok_button";
+    }
+
+    public static String getInstallCancelBtnId() {
+        return INSTALLER_PKG + ":id/cancel_button";
+    }
+
+    public static String getInstalledLaunchBtnId() {
+        return INSTALLER_PKG + ":id/launch_button";
+    }
+
+    public static String getInstalledDoneBtnId() {
+        return INSTALLER_PKG + ":id/done_button";
+    }
+
+    public static String getUninstallTitleId() {
+        return INSTALLER_PKG + ":id/alertTitle";
+    }
+
+    public static String getUninstallOkBtnId() {
+        return INSTALLER_PKG + ":id/button1";
+    }
+
+    public static String getUninstallCancelBtnId() {
+        return INSTALLER_PKG + ":id/button2";
     }
 }

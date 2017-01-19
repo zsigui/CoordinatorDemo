@@ -5,8 +5,8 @@ import android.content.IntentFilter;
 import android.os.BatteryManager;
 import android.util.Log;
 
-import com.luna.powersaver.gp.BatteryEventReceiver;
-import com.luna.powersaver.gp.StaticConst;
+import com.luna.powersaver.gp.receiver.BatteryEventReceiver;
+import com.luna.powersaver.gp.common.StaticConst;
 
 /**
  * Created by zsigui on 17-1-12.

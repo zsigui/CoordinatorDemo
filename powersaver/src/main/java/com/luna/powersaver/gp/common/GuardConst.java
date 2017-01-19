@@ -1,4 +1,4 @@
-package com.jackiez.materialdemo.extra.service;
+package com.luna.powersaver.gp.common;
 
 /**
  * Created by zsigui on 17-1-13.

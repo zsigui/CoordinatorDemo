@@ -13,6 +13,7 @@ import android.view.WindowManager;
 import android.widget.CheckedTextView;
 import android.widget.TextView;
 
+import com.luna.powersaver.gp.common.StaticConst;
 import com.luna.powersaver.gp.manager.BatteryTimeManager;
 import com.luna.powersaver.gp.utils.DateUtil;
 import com.luna.powersaver.gp.view.CircleProgressView;

@@ -18,7 +18,7 @@ import android.view.accessibility.AccessibilityManager;
 
 import com.jackiez.materialdemo.R;
 import com.jackiez.materialdemo.extra.dialog.BottomSheetDialog;
-import com.luna.powersaver.gp.GuardService;
+import com.luna.powersaver.gp.service.GuardService;
 
 import java.util.List;
 

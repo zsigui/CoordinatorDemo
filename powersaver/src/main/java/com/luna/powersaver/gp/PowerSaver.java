@@ -18,6 +18,10 @@ public class PowerSaver {
 
     private PowerSaver(){}
 
+    public static PowerSaver get() {
+        return sInstance;
+    }
+
     public void addCallback(StateChangeCallback callback) {
         if (callback == null)
             return;
@@ -46,10 +50,6 @@ public class PowerSaver {
         for (int i = 0; i < mCallbacks.size(); i++) {
             mCallbacks.valueAt(i).onGuardHide();
         }
-    }
-
-    public static PowerSaver get() {
-        return sInstance;
     }
 
     private long mLastRecordTime = 0;
