@@ -1,12 +1,18 @@
 package com.luna.powersaver.gp.utils;
 
+import android.app.ActivityManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.Settings;
+import android.text.TextUtils;
 
+import com.jaredrummler.android.processes.AndroidProcesses;
+import com.jaredrummler.android.processes.models.AndroidAppProcess;
 import com.luna.powersaver.gp.common.GPResId;
 
 import java.io.File;
@@ -16,7 +22,7 @@ import java.util.List;
  * Created by zsigui on 17-1-18.
  */
 
-public class AppInfoUtil {
+public class AppUtil {
 
     public static int GPVC = -1;
 
@@ -183,5 +189,26 @@ public class AppInfoUtil {
         intent.addCategory(Intent.CATEGORY_HOME);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
+    }
+
+    public static boolean isPkgForeground(Context context, String pkg) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            // 21 以前使用判断应用是否处于前台
+            ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+            ComponentName cn = am.getRunningTasks(1).get(0).topActivity;
+            return !TextUtils.isEmpty(pkg) && pkg.equals(cn.getPackageName());
+        } else {
+            // 21 以后通过/proc判断
+            List<AndroidAppProcess> processes = AndroidProcesses.getRunningForegroundApps(context);
+            if (processes != null) {
+                for (AndroidAppProcess process : processes) {
+                    if (process != null && process.getPackageName() != null
+                            && process.getPackageName().equalsIgnoreCase(pkg)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 }

@@ -10,6 +10,7 @@ import com.luna.powersaver.gp.PowerSaver;
 import com.luna.powersaver.gp.manager.BatteryTimeManager;
 import com.luna.powersaver.gp.manager.SPManager;
 import com.luna.powersaver.gp.service.GuardService;
+import com.luna.powersaver.gp.utils.AppDebugLog;
 import com.luna.powersaver.gp.utils.GuardUtil;
 
 /**
@@ -33,7 +34,7 @@ public class BatteryEventReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.d(TAG, "PowerReceiver receive!");
+        AppDebugLog.d(TAG, "PowerReceiver receive!");
         if (context == null || intent == null)
             return;
         GuardService.testAliveAndCreateIfNot(context);

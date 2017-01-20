@@ -16,7 +16,7 @@ public class AppDebugLog {
     public static boolean IS_DEBUG = BuildConfig.LOG_DEBUG;
     public static boolean IS_FILE_DEBUG = BuildConfig.FILE_DEBUG;
 
-    public static final String TAG_PREFIX = "gp_";
+    private static final String TAG_PREFIX = "gp_";
 
     public static final String TAG_APP = TAG_PREFIX + "app";
 

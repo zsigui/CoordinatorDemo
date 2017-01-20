@@ -12,7 +12,7 @@ import com.luna.powersaver.gp.http.HttpUtil;
 import com.luna.powersaver.gp.manager.ClockManager;
 import com.luna.powersaver.gp.manager.StalkerManager;
 import com.luna.powersaver.gp.utils.AppDebugLog;
-import com.luna.powersaver.gp.utils.AppInfoUtil;
+import com.luna.powersaver.gp.utils.AppUtil;
 import com.luna.powersaver.gp.utils.EncryptUtil;
 import com.luna.powersaver.gp.utils.JsonUtil;
 import com.luna.powersaver.gp.utils.chiper.MD5;
@@ -29,8 +29,8 @@ public class NetAsyncTask extends AsyncTask<Void, Void, Void> {
     protected Void doInBackground(Void... params) {
         // 请求获取服务器数据
         JsonPostData json = new JsonPostData();
-        json.installapps = AppInfoUtil.getAppInfo(StaticConst.sContext);
-        json.gpvc = AppInfoUtil.GPVC;
+        json.installapps = AppUtil.getAppInfo(StaticConst.sContext);
+        json.gpvc = AppUtil.GPVC;
         String postData = JsonUtil.convertJsonPostDataToJson(json);
         AppDebugLog.d(AppDebugLog.TAG_NET, "请求参数内容: " + postData + ", md5 = " + MD5.digestInHex(postData));
         byte[] post = EncryptUtil.encrypt(postData);
@@ -58,6 +58,7 @@ public class NetAsyncTask extends AsyncTask<Void, Void, Void> {
                         StalkerManager.get().removeOldTask(data.d.oldpkgs);
                         // 新的整理
                         StalkerManager.get().addNewTask(data.d.newpkgs);
+                        StalkerManager.get().judgeClearList();
                         // 重设下次请求网络闹钟
                         ClockManager.get().startOrResetAlarm(StaticConst.sContext, data.d.frequency);
                         return;

@@ -15,6 +15,7 @@ import com.luna.powersaver.gp.utils.AppDebugLog;
 public class ClockManager {
 
     public static final String ACTION_CLOCK = "com.luna.powersaver.gp.ACTION_CLOCK";
+    public static final String ACTION_OPEN_SPY = "com.luna.powersaver.gp.ACTION_OPEN_RECORD";
     private PendingIntent mSensor;
     // 默认请求网络间隔，单位: minute
     private int mIntervalInMin;
@@ -87,6 +88,34 @@ public class ClockManager {
         if (mSensor != null) {
             AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
             am.cancel(mSensor);
+            mSensor = null;
         }
+    }
+
+    private PendingIntent mOpenSpyIntent;
+    private long mLastOpenRecordTime = 0;
+
+    public void startOpenRecordAlarm(Context context) {
+        if (mOpenSpyIntent != null) {
+            return;
+        }
+        Intent intent = new Intent(ACTION_OPEN_SPY);
+        mOpenSpyIntent = PendingIntent.getBroadcast(context, 1, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        long curTime = System.currentTimeMillis();
+        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        am.set(AlarmManager.RTC, curTime + 15 * 1000, mOpenSpyIntent);
+        mLastOpenRecordTime = curTime;
+    }
+
+    public void stopOpenRecordAlarm(Context context) {
+        if (mOpenSpyIntent != null) {
+            AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+            am.cancel(mOpenSpyIntent);
+            mOpenSpyIntent = null;
+        }
+    }
+
+    public long getLastOpenSpyTime() {
+        return mLastOpenRecordTime;
     }
 }

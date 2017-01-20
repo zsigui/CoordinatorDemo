@@ -11,6 +11,13 @@ public class GPResId {
     public static final String INSTALLER_PKG = "com.android.packageinstaller";
 
     /*-------------------------- 以下部分为 Google Play Store 资源ID ----------------------------*/
+
+    public static String getErrorRetryResId() { return PACKAGE + ":id/retry_button"; }
+    /**
+     * 应用首页标题栏
+     * @return
+     */
+    public static String getMainBarResId() { return PACKAGE + ":id/play_header_list_tab_container"; }
     /**
      * 应用详情页：安装按钮
      * @return
@@ -51,6 +58,10 @@ public class GPResId {
     public static String getContinueBtnId() {
         return PACKAGE +  ":id/continue_button";
     }
+
+    public static String getUninstallBtnId() { return PACKAGE + ":id/uninstall_button"; }
+
+    public static String getLaunchBtnId() { return PACKAGE + ":id/launch_button"; }
 
     public static String getMainActivityClassName() {
         return "com.google.android.finsky.activities.MainActivity";

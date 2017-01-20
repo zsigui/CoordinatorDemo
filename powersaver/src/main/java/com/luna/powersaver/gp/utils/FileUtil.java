@@ -6,13 +6,20 @@ import android.content.pm.PackageManager;
 import android.os.Environment;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.Locale;
 
 import static android.os.Environment.MEDIA_MOUNTED;
@@ -23,6 +30,8 @@ import static android.os.Environment.MEDIA_MOUNTED;
 
 public class FileUtil {
 
+    // 定义3MB为大小文件分隔
+    private static final int BIG_FILE_COUNT = 3 * 1024 * 1024;
     /**
      * 强制命令创建文件夹
      */
@@ -287,11 +296,106 @@ public class FileUtil {
         }
     }
 
-    public static void writeData(File storeFile, String data, boolean isAppend) {
+    /**
+     * 写入和追加字节数组类型的大文本数据到文件中
+     *
+     * @param file
+     * @param data
+     * @param append
+     */
+    public static void writeBytesBigToFile(File file, byte[] data, boolean append) {
+        FileChannel outChannel = null;
+        try {
+            outChannel = new RandomAccessFile(file, "rw").getChannel();
+            long size = data.length + (append ? outChannel.size() : 0);
+            MappedByteBuffer mapBuffer = outChannel.map(FileChannel.MapMode.READ_WRITE, 0, size);
+            int position = append ? 0 : (int) outChannel.size();
+            mapBuffer.position(position);
+            mapBuffer.put(data);
+            mapBuffer.force();
+            mapBuffer.flip();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            closeIO(outChannel);
+        }
+    }
 
+    /**
+     * 写入字节数组数据到指定输出流中(该方法会创建新文件)
+     *
+     * @param out
+     * @param data
+     */
+    public static void writeBytes(OutputStream out, byte[] data) {
+        if (out == null || data == null)
+            return;
+
+        if (out instanceof FileOutputStream) {
+            // 通道方式写入
+            FileChannel outChannel = null;
+            try {
+                outChannel = ((FileOutputStream) out).getChannel();
+                outChannel.write(ByteBuffer.wrap(data));
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                closeIO(outChannel);
+            }
+        } else {
+            // 普通IO写入
+            BufferedOutputStream bout = (out instanceof BufferedOutputStream) ?
+                    (BufferedOutputStream) out : new BufferedOutputStream(out);
+            try {
+                bout.write(data);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                closeIO(bout, out);
+            }
+        }
+    }
+
+    /**
+     * 写入字节数组数据到指定文件中(该方法会创建新文件)
+     *
+     * @param file
+     * @param data
+     */
+    public static void writeBytes(File file, byte[] data) {
+        FileOutputStream fout = null;
+        try {
+            fout = new FileOutputStream(file);
+            int size = data.length;
+            if (size > BIG_FILE_COUNT && size < Integer.MAX_VALUE) {
+                // 使用Mapped
+                writeBytesBigToFile(file, data, false);
+            } else {
+                writeBytes(fout, data);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } finally {
+            closeIO(fout);
+        }
+    }
+
+    public static void writeData(File storeFile, String data) {
+        try {
+            if (data == null)
+                return;
+            writeBytes(storeFile, data.getBytes(CommonUtil.DEFAULT_SYS_CHARSET));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static String readData(File storeFile) {
+        try {
+            return new String(readBytes(storeFile), CommonUtil.DEFAULT_SYS_CHARSET);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return "";
     }
 }

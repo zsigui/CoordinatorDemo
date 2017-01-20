@@ -91,7 +91,6 @@ public class GuardService extends Service {
     }
 
     public static void testAliveAndCreateIfNot(Context context) {
-        AppDebugLog.w("test", "testAliveAndCreateIfNot: isRun = " + sIsRunningThisService);
         if (!sIsRunningThisService) {
             Intent intent = new Intent(context, GuardService.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
