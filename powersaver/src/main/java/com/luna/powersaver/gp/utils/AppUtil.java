@@ -65,7 +65,7 @@ public class AppUtil {
     public static boolean jumpToStore(Context context, String packageName) {
         if (context == null)
             return false;
-        Intent intent = new Intent(GPResId.getWakeAction() + packageName);
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(GPResId.getWakeAction() + packageName));
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.setClassName(GPResId.PACKAGE, GPResId.getMainActivityClassName());
         if (intent.resolveActivity(context.getPackageManager()) != null) {

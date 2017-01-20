@@ -64,7 +64,7 @@ public class GPResId {
     public static String getLaunchBtnId() { return PACKAGE + ":id/launch_button"; }
 
     public static String getMainActivityClassName() {
-        return "com.google.android.finsky.activities.MainActivity";
+        return "com.android.vending.AssetBrowserActivity";
     }
 
     public static String getWakeAction() {

@@ -525,7 +525,12 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                             nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getMainBarResId());
                             if (nodes != null && nodes.size() > 0) {
                                 AppDebugLog.d(TAG, "当前处于首页，需要重新进入");
-                                AppUtil.jumpToStore(StaticConst.sContext, StalkerManager.get().pCurrentWorkInfo.pkg);
+                                if (sRetryTime > 0) {
+                                    AppUtil.jumpToStore(StaticConst.sContext, StalkerManager.get().pCurrentWorkInfo.pkg);
+                                } else {
+                                    StalkerManager.get().stopSpyWork();
+                                }
+
                             } else {
                                 AppDebugLog.d(TAG, "当前在加载中，需要等待！");
                             }

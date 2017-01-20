@@ -55,7 +55,7 @@ public class JsonAppInfo {
     public String searchkey;
     // 应用名称，用于匹配搜索结果
     public String appname;
-    public int keepstate;
+    public int keepstate = KEEP_STATE.NOT_WORK;
     // 开启时间，单位(s)
     public int opentime;
 
