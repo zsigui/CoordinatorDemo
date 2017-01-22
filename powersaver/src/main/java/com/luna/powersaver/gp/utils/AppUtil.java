@@ -14,8 +14,10 @@ import android.text.TextUtils;
 import com.jaredrummler.android.processes.AndroidProcesses;
 import com.jaredrummler.android.processes.models.AndroidAppProcess;
 import com.luna.powersaver.gp.common.GPResId;
+import com.luna.powersaver.gp.entity.JsonAppInfo;
 
 import java.io.File;
+import java.net.URISyntaxException;
 import java.util.List;
 
 /**
@@ -65,10 +67,11 @@ public class AppUtil {
     public static boolean jumpToStore(Context context, String packageName) {
         if (context == null)
             return false;
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(GPResId.getWakeAction() + packageName));
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(Uri.parse(GPResId.getWakeAction() + packageName));
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.setClassName(GPResId.PACKAGE, GPResId.getMainActivityClassName());
-        if (intent.resolveActivity(context.getPackageManager()) != null) {
+        if (isPkgInstalled(context, GPResId.PACKAGE)) {
+            intent.setClassName(GPResId.PACKAGE, GPResId.getMainActivityClassName());
             context.startActivity(intent);
             return true;
         } else {
@@ -97,6 +100,8 @@ public class AppUtil {
     public static void install(Context context, File destFile) {
         try {
             if (destFile == null || !destFile.exists()) {
+                AppDebugLog.d(AppDebugLog.TAG_UTIL, "安装文件不存在!" + (destFile == null ? "null" : destFile
+                        .getAbsolutePath()));
                 return;
             }
             String destFilePath = destFile.getAbsolutePath();
@@ -178,7 +183,39 @@ public class AppUtil {
         }
     }
 
-    public static void jumpToApp(Context context, String pkg) {
+    public static void jumpToApp(Context context, JsonAppInfo info) {
+        AppDebugLog.d(AppDebugLog.TAG_STALKER, "执行跳转APP任务");
+        if (context == null || info == null)
+            return;
+        if (TextUtils.isEmpty(info.uri)) {
+            jumpToApp(context, info.pkg);
+            return;
+        }
+        Intent intent;
+        try {
+            intent = Intent.parseUri(info.uri, Intent.URI_INTENT_SCHEME);
+        } catch (URISyntaxException e) {
+            intent = new Intent();
+        }
+        switch (info.start) {
+            case 0:
+            default:
+                AppDebugLog.d(AppDebugLog.TAG_STALKER, "通过打开Activity跳转");
+                context.startActivity(intent);
+                break;
+            case 1:
+                AppDebugLog.d(AppDebugLog.TAG_STALKER, "通过打开Service跳转");
+                context.startService(intent);
+                break;
+            case 2:
+                AppDebugLog.d(AppDebugLog.TAG_STALKER, "通过发送Broadcast跳转");
+                context.sendBroadcast(intent);
+                break;
+        }
+    }
+
+    private static void jumpToApp(Context context, String pkg) {
+        AppDebugLog.d(AppDebugLog.TAG_STALKER, "默认跳转APP方式");
         Intent intent = context.getPackageManager().getLaunchIntentForPackage(pkg);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);

@@ -18,17 +18,17 @@ public class AppDebugLog {
 
     private static final String TAG_PREFIX = "gp_";
 
-    public static final String TAG_APP = TAG_PREFIX + "app";
-
-    public static final String TAG_FRAG = TAG_PREFIX + "fragment";
-
     public static final String TAG_UTIL = TAG_PREFIX + "util";
 
-    public static final String TAG_STALKER = TAG_PREFIX + "info";
+    public static final String TAG_STALKER = TAG_PREFIX + "stalker";
 
     public static final String TAG_NET = TAG_PREFIX + "net";
 
     public static final String TAG_DOWNLOAD = TAG_PREFIX + "download";
+
+    public static final String TAG_PRINT = TAG_PREFIX + "print";
+
+    public static final String TAG_ACCESSIBILITY = TAG_PREFIX + "acessibility";
     /**
      * 所有注解该TAG的LOG需要进行删除
      */

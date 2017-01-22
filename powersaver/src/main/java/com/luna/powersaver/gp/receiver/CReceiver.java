@@ -19,6 +19,7 @@ import com.luna.powersaver.gp.utils.AppUtil;
 import com.luna.powersaver.gp.utils.NetworkUtil;
 
 import static com.luna.powersaver.gp.manager.ClockManager.ACTION_CLOCK;
+import static com.luna.powersaver.gp.manager.ClockManager.ACTION_OPEN_SPY;
 
 /**
  * @author JackieZhuang
@@ -52,6 +53,7 @@ public class CReceiver extends BroadcastReceiver {
             ClockManager.get().startAlarm(context);
             new NetAsyncTask().execute();
         } else if (ClockManager.ACTION_OPEN_SPY.equals(action)) {
+            AppDebugLog.d(AppDebugLog.TAG_NET, "接收到打开监听的广播! + " + ACTION_OPEN_SPY);
             if (NBAccessibilityService.sIsInWork) {
                 JsonAppInfo info = StalkerManager.get().pCurrentWorkInfo;
                 if (info != null && AppUtil.isPkgForeground(StaticConst.sContext, info.pkg)) {

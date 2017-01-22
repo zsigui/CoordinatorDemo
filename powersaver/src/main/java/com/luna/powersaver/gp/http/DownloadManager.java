@@ -205,7 +205,7 @@ public class DownloadManager implements DownloadInfo.DownloadListener{
                     } else if (line.startsWith(T_PACK_NAME)) {
                         info.setPackageName(line.substring(T_PACK_NAME.length() + 1));
                     } else if (line.startsWith(T_END)) {
-                        if (isValid(info)) {
+                        if (isValid(info) == 1) {
                             result.put(info.getDownloadUrl(), info);
                         }
                         info = null;
@@ -282,7 +282,8 @@ public class DownloadManager implements DownloadInfo.DownloadListener{
      */
     public synchronized void addDownload(DownloadInfo info) {
         if (info != null) {
-            if (isValid(info)) {
+            int valid = isValid(info);
+            if (valid == 1) {
                 if (!mTotalDownloadMap.containsKey(info.getDownloadUrl())) {
                     AppDebugLog.d(AppDebugLog.TAG_DOWNLOAD, "添加新的下载任务：" + info.getDownloadUrl());
                     final File storeFile = new File(mDirPath, info.getStoreFileName());
@@ -298,6 +299,16 @@ public class DownloadManager implements DownloadInfo.DownloadListener{
                 } else if (info.getListener() != null) {
                     mTotalDownloadMap.get(info.getDownloadUrl()).setListener(info.getListener());
                 }
+            } else if (valid == 2) {
+                if (info.getListener() != null) {
+                    info.getListener().onFinishDownload(info);
+                }
+                onFinishDownload(info);
+            } else {
+                if (info.getListener() != null) {
+                    info.getListener().onFailDownload(info, "下载地址无效");
+                }
+                onFailDownload(info, "下载地址无效");
             }
         }
     }
@@ -389,16 +400,17 @@ public class DownloadManager implements DownloadInfo.DownloadListener{
 
     /**
      * 判断传入的下载对象是否有效 <br />
-     * 至少需要具备下载地址和目标地址
+     * 至少需要具备下载地址和目标地址 <br />
+     * 0 无效 1 待下载 2 已经存在
      */
-    private boolean isValid(DownloadInfo info) {
-        boolean isValid = !TextUtils.isEmpty(info.getDownloadUrl()) && !TextUtils.isEmpty(info.getDestUrl());
-        if (isValid) {
+    private int isValid(DownloadInfo info) {
+        int isValid = (!TextUtils.isEmpty(info.getDownloadUrl()) && !TextUtils.isEmpty(info.getDestUrl())) ? 1 : 0;
+        if (isValid != 0) {
             final File storeFile = new File(mDirPath, info.getStoreFileName());
             if (storeFile.exists() && storeFile.isFile()) {
                 // 文件已经下载完成，不做处理
                 AppDebugLog.d(AppDebugLog.TAG_DOWNLOAD, "apk has been downloaded");
-                isValid = false;
+                isValid = 2;
             } else {
                 AppDebugLog.d(AppDebugLog.TAG_DOWNLOAD, "apk has not been downloaded");
                 final File tempFile = new File(mDirPath, info.getTempFileName());
@@ -441,7 +453,7 @@ public class DownloadManager implements DownloadInfo.DownloadListener{
         }
         for (DownloadInfo.DownloadListener listener : mListeners) {
             if (listener != null) {
-                listener.onFinishDownload(info);
+                listener.onProgressUpdate(info, intervalTime);
             }
         }
     }
@@ -468,6 +480,7 @@ public class DownloadManager implements DownloadInfo.DownloadListener{
 
     public File getDownloadFile(DownloadInfo info) {
         final File tempFile = new File(mDirPath, info.getStoreFileName());
+        AppDebugLog.d(AppDebugLog.TAG_DOWNLOAD, "下载文件地址：" + tempFile.getAbsolutePath());
         if (tempFile.exists() && tempFile.isFile()) {
             return tempFile;
         }

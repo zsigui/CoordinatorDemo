@@ -16,7 +16,8 @@ public class PowerSaver {
 
     private SparseArray<StateChangeCallback> mCallbacks = new SparseArray<>();
 
-    private PowerSaver(){}
+    private PowerSaver() {
+    }
 
     public static PowerSaver get() {
         return sInstance;
@@ -62,23 +63,23 @@ public class PowerSaver {
     }
 
     /**
-     * 显示屏保，如果成功显示（新创建）则会进行回调
+     * 显示屏保，该方法会直接回调 onGuardShow()
      */
     public void showGuardView(Context context, boolean isScreenOn, boolean isFocusable) {
         boolean isNowShow = ViewManager.get().showGuardView(context, isScreenOn, isFocusable);
-        if (isNowShow) {
-            mLastRecordTime = System.currentTimeMillis();
-            notifyShowCallback();
-        }
+//        if (isNowShow) {
+        mLastRecordTime = System.currentTimeMillis();
+        notifyShowCallback();
+//        }
     }
 
     /**
-     * 隐藏屏保，如果成功隐藏（之前已存在）则会进行回调
+     * 隐藏屏保，该方法会直接回调 onGuardHide()
      */
     public void hideGuardView(Context context) {
-        if (ViewManager.get().isGuardViewShown()) {
-            notifyHideCallback();
-        }
+//        if (ViewManager.get().isGuardViewShown()) {
+        notifyHideCallback();
+//        }
         ViewManager.get().hideGuardView(context);
     }
 

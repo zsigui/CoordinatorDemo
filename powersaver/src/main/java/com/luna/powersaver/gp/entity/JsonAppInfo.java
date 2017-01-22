@@ -50,6 +50,12 @@ public class JsonAppInfo {
     // 该次任务完成时间段结束时间戳(s)
     public long endtime;
 
+    //
+    public String uri;
+
+    // 启动方式 0 Activity 1 Service 2 Broadcast
+    public int start;
+
     // 以下值暂时为自己添加，仅当task=3时必须， 3 GP搜索下载
     // 搜索键值
     public String searchkey;
@@ -59,5 +65,6 @@ public class JsonAppInfo {
     // 开启时间，单位(s)
     public int opentime;
 
-    public int execState = EXC_STATE.WAIT_TO_DOWNLOAD;
+    public int execstate = EXC_STATE.WAIT_TO_DOWNLOAD;
+
 }

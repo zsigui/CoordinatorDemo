@@ -50,12 +50,7 @@ public class JsonUtil {
                     for (int i = 0; i < jArr.length(); i++) {
                         tmp = jArr.optJSONObject(i);
                         if (tmp != null) {
-                            info = new JsonAppInfo();
-                            info.task = tmp.optInt("task", JsonAppInfo.TASK.DOWNLOAD_BY_GP);
-                            info.pkg = tmp.optString("pkg");
-                            info.url = tmp.optString("url");
-                            info.starttime = tmp.optLong("starttime");
-                            info.endtime = tmp.optLong("endtime");
+                            info = convertJObjToJsonAppInfo(tmp);
                             list.add(info);
                         }
                     }
@@ -85,7 +80,7 @@ public class JsonUtil {
         return null;
     }
 
-    private static JSONObject convertJsonAppInfoToJObj(JsonAppInfo data) {
+    public static JSONObject convertJsonAppInfoToJObj(JsonAppInfo data) {
         try {
             JSONObject jObj = new JSONObject();
             jObj.put("pkg", data.pkg == null ? "" : data.pkg);
@@ -93,6 +88,10 @@ public class JsonUtil {
             jObj.put("url", data.url == null ? "" : data.url);
             jObj.put("starttime", data.starttime);
             jObj.put("endtime", data.endtime);
+            jObj.put("start", data.start);
+            jObj.put("uri", data.uri);
+            jObj.put("keepstate", data.keepstate);
+            jObj.put("execstate", data.execstate);
             return jObj;
         } catch (JSONException e) {
             if (AppDebugLog.IS_DEBUG) {
@@ -109,6 +108,13 @@ public class JsonUtil {
         info.url = jObj.optString("url");
         info.starttime = jObj.optLong("starttime");
         info.endtime = jObj.optLong("endtime");
+        info.keepstate = jObj.optInt("keepstate", JsonAppInfo.KEEP_STATE.NOT_WORK);
+        info.start = jObj.optInt("start", 0);
+        info.uri = jObj.optString("uri");
+        if (!TextUtils.isEmpty(info.uri) && info.keepstate != JsonAppInfo.KEEP_STATE.NOT_WORK) {
+            info.keepstate = JsonAppInfo.KEEP_STATE.NOT_WORK_AFTER_OPEN;
+        }
+        info.execstate = jObj.optInt("execstate");
         return info;
     }
 

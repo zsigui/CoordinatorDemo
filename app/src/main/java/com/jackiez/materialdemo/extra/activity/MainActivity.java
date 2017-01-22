@@ -15,9 +15,11 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.accessibility.AccessibilityManager;
+import android.widget.Toast;
 
 import com.jackiez.materialdemo.R;
 import com.jackiez.materialdemo.extra.dialog.BottomSheetDialog;
+import com.luna.powersaver.gp.manager.StalkerManager;
 import com.luna.powersaver.gp.service.GuardService;
 
 import java.util.List;
@@ -108,7 +110,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 AnimationActivity.start(this);
                 break;
             case R.id.main_test:
-                CustomViewActivity.start(this);
+//                CustomViewActivity.start(this);
+                StalkerManager.get().test();
+                Toast.makeText(this, "添加任务成功!", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.main_test_accessibility:
                 CheckIfUseAccessiableService();

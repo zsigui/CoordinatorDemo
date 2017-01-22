@@ -214,7 +214,6 @@ public class HttpUtil {
         } finally {
             if (connection != null) {
                 connection.disconnect();
-                connection = null;
             }
         }
     }

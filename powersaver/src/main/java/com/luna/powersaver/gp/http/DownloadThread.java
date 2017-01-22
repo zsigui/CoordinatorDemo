@@ -219,9 +219,9 @@ public class DownloadThread extends Thread implements DownloadInfo.DownloadListe
     }
 
     private void finishDownload(DownloadInfo info, File tempFile) {
-        onFinishDownload(info);
         FileUtil.copy(tempFile, new File(mDirPath, info.getStoreFileName()));
         DownloadManager.getInstance(mContext).removeDownload(info, true);
+        onFinishDownload(info);
     }
 
     @Override

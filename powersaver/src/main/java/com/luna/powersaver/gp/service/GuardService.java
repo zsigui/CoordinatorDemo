@@ -8,13 +8,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import com.luna.powersaver.gp.utils.AppDebugLog;
 
 import com.luna.powersaver.gp.PowerSaver;
 import com.luna.powersaver.gp.common.StaticConst;
 import com.luna.powersaver.gp.manager.BatteryTimeManager;
 import com.luna.powersaver.gp.manager.ClockManager;
 import com.luna.powersaver.gp.receiver.BatteryEventReceiver;
+import com.luna.powersaver.gp.utils.AppDebugLog;
 import com.luna.powersaver.gp.utils.GuardUtil;
 
 /**

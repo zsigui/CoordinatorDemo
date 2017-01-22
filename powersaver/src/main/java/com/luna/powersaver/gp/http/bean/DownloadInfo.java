@@ -147,7 +147,7 @@ public class DownloadInfo{
         } else {
             temp = MD5.digestInHex(url);
         }
-        return (TextUtils.isEmpty(getPackageName()) ? "" : getPackageName()) + temp + TEMP_FILE_NAME_SUFFIX;
+        return (TextUtils.isEmpty(getPackageName()) ? "" : (getPackageName() + "_")) + temp + TEMP_FILE_NAME_SUFFIX;
     }
 
     /**
@@ -163,6 +163,7 @@ public class DownloadInfo{
      */
     private String createDownloadFilePath(String url, String identify) {
         String temp;
+        AppDebugLog.d(AppDebugLog.TAG_DOWNLOAD, "url = " + url + ", identify = " + identify);
         if (!TextUtils.isEmpty(identify)) {
             final String decodedUrl;
             try {
@@ -177,7 +178,7 @@ public class DownloadInfo{
         } else {
             temp = MD5.digestInHex(url);
         }
-        return (TextUtils.isEmpty(getPackageName()) ? "" : getPackageName()) + temp + APK_FILE_NAME_SUFFIX;
+        return (TextUtils.isEmpty(getPackageName()) ? "" : (getPackageName() + "_")) + temp + APK_FILE_NAME_SUFFIX;
     }
 
     public void setListener(DownloadListener listener) {

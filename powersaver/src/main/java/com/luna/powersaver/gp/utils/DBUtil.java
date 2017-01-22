@@ -46,10 +46,10 @@ public class DBUtil {
     public static boolean addNewInfo(JsonAppInfo info) {
         JsonAppInfo old = findInfoByPkg(info.pkg);
         if (old != null) {
-            if (old.execState != JsonAppInfo.EXC_STATE.FINISHED
+            if (old.execstate != JsonAppInfo.EXC_STATE.FINISHED
                     || (old.endtime < info.starttime)) {
                 // 任务没完成或者需要重置
-                info.execState = old.execState;
+                info.execstate = old.execstate;
                 // 进行更新
                 updateInfo(info);
                 return true;

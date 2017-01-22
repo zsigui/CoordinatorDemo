@@ -8,7 +8,9 @@ public class GPResId {
 
     public static final String PACKAGE = "com.android.vending";
     public static final String NOTIFY_DOWNLOAD_PKG = "com.android.providers.downloads";
+    public static final String NOTIFY_GOOGLE_DOWNLOAD_PKG = "com.google.android.providers.downloads";
     public static final String INSTALLER_PKG = "com.android.packageinstaller";
+    public static final String INSTALLER_GOOGLE_PKG = "com.google.android.packageinstaller";
 
     /*-------------------------- 以下部分为 Google Play Store 资源ID ----------------------------*/
 
