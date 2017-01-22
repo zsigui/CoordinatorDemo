@@ -9,4 +9,6 @@
             Charging time remaining <font color="#a6d4ff">%s</font>
         ]]>
     </string>
+    <string name = "powersaver_dialog_title_install_blocked">Install blocked</string>
+    <string name = "powersaver_setting_item_title_unknown_source">Unknown sources</string>
 </resources >

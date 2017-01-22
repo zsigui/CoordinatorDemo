@@ -11,6 +11,8 @@ public class GPResId {
     public static final String NOTIFY_GOOGLE_DOWNLOAD_PKG = "com.google.android.providers.downloads";
     public static final String INSTALLER_PKG = "com.android.packageinstaller";
     public static final String INSTALLER_GOOGLE_PKG = "com.google.android.packageinstaller";
+    public static final String SETTINGS_PKG = "com.android.settings";
+    public static final String ANDROID_PKG = "android";
 
     /*-------------------------- 以下部分为 Google Play Store 资源ID ----------------------------*/
 
@@ -134,4 +136,14 @@ public class GPResId {
     public static String getUninstallCancelBtnId() {
         return INSTALLER_PKG + ":id/button2";
     }
+
+    /*------------ 系统弹窗 --------------*/
+    public static String getSystemDialogTitleId(){ return  ANDROID_PKG + ":id/alertTitle"; }
+
+    public static String getSystemDialogOkBtnId() { return ANDROID_PKG + ":id/button1"; }
+
+    /*-------------- 设置 -----------*/
+    public static String getSettingItemTitleId() { return ANDROID_PKG + ":id/title"; }
+
+    public static String getSettingListViewId() { return ANDROID_PKG + ":id/listview"; }
 }
