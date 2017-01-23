@@ -96,6 +96,7 @@ public class ClockManager {
     private long mLastOpenRecordTime = 0;
 
     public void startOpenRecordAlarm(Context context) {
+        AppDebugLog.d(AppDebugLog.TAG_NET, "开启监听时间闹钟! isNull = " + (mOpenSpyIntent == null));
         if (mOpenSpyIntent != null) {
             return;
         }
@@ -105,9 +106,11 @@ public class ClockManager {
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         am.set(AlarmManager.RTC, curTime + 15 * 1000, mOpenSpyIntent);
         mLastOpenRecordTime = curTime;
+        mOpenSpyIntent = null;
     }
 
     public void stopOpenRecordAlarm(Context context) {
+        AppDebugLog.d(AppDebugLog.TAG_NET, "结束监听时间闹钟! isNull = " + (mOpenSpyIntent == null));
         if (mOpenSpyIntent != null) {
             AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
             am.cancel(mOpenSpyIntent);

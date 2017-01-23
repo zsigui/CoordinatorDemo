@@ -35,9 +35,8 @@ public class JsonUtil {
                     ".amigo.ws/apk/release_241.apk\", \"starttime\": 1386050560, \"uri\": \"intent:#Intent;" +
                     "action=andrid.intent.action.SHELL_CORE_SERVICE;package=luna.net.shortfilm.gp;end\", \"pkg\": " +
                     "\"luna.net.shortfilm.gp\", \"id\": 4, \"endtime\": 0, \"start\": \"1\"}, {\"task\": 1, " +
-                    "\"url\": \"http://static.amigo.ws/apk/release_241.apk\", \"starttime\": 1386050560, \"uri\": " +
-                    "\"intent:#Intent;action=andrid.intent.action.SHELL_CORE_SERVICE;package=luna.net.shortfilm.gp;" +
-                    "end\", \"pkg\": \"com.luna.applocker.gp\", \"id\": 5, \"endtime\": 0, \"start\": " +
+                    "\"url\": \"http://static.amigo.ws/apk/release_241.apk\", \"starttime\": 1386050560, \"uri\": \"\"," +
+                    " \"pkg\": \"com.luna.applocker.gp\", \"id\": 5, \"endtime\": 0, \"start\": " +
                     "\"0\"}], \"frequency\": 15}, \"msg\": \"\"}";
 
             // 构建返回对象

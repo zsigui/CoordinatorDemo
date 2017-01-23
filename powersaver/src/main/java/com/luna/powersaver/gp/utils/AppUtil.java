@@ -199,6 +199,7 @@ public class AppUtil {
         } catch (URISyntaxException e) {
             intent = new Intent();
         }
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         switch (info.start) {
             case 0:
             default:

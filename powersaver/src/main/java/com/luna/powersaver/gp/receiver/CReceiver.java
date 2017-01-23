@@ -57,10 +57,13 @@ public class CReceiver extends BroadcastReceiver {
             if (NBAccessibilityService.sIsInWork) {
                 JsonAppInfo info = StalkerManager.get().pCurrentWorkInfo;
                 if (info != null && AppUtil.isPkgForeground(StaticConst.sContext, info.pkg)) {
+                    AppDebugLog.d(AppDebugLog.TAG_NET, "当前应用正在前台，进行累加，时间：" + info.opentime);
                     info.opentime += (System.currentTimeMillis() - ClockManager.get().getLastOpenSpyTime()) / 1000;
                     if (StalkerManager.get().isFinishedOpen()) {
 //                        AppInfoUtil.jumpToHome(StaticConst.sContext);
                         StalkerManager.get().doContinueAfterOpened();
+                    } else {
+                        ClockManager.get().startOpenRecordAlarm(StaticConst.sContext);
                     }
                 }
             }

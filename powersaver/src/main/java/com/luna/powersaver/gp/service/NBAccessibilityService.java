@@ -660,8 +660,8 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                     }
                 }
             } else if (sCurrentWorkState == 1) {
-                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "监测下载中，现在要监测任务是否完成：" + event.getText()
-                        + (event.getPackageName()) + ", ");
+                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "监测下载中，现在要监测任务是否完成："
+                        + event.getPackageName());
                 spyIsAppInstalled(event);
             }
         }

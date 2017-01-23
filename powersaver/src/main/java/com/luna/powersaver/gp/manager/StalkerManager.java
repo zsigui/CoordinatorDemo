@@ -357,9 +357,11 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
             return;
         }
         AppDebugLog.d(AppDebugLog.TAG_STALKER, "doContinueAfterInstalled：当前状态 = " + pCurrentWorkInfo.execstate);
-//        if (pCurrentWorkInfo.execstate == JsonAppInfo.EXC_STATE.INSTALLED) {
-//            return;
-//        }
+        if (!AppUtil.isPkgInstalled(StaticConst.sContext, pCurrentWorkInfo.pkg)) {
+            pCurrentWorkInfo.execstate = JsonAppInfo.EXC_STATE.DOWNLOADING;
+            doStart();
+            return;
+        }
         pCurrentWorkInfo.execstate = JsonAppInfo.EXC_STATE.INSTALLED;
         NBAccessibilityService.sCurrentWorkState = 0;
         NBAccessibilityService.sCurrentWorkType = NBAccessibilityService.TYPE.IGNORED;
@@ -452,7 +454,13 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
      */
     private void judgeOpen() {
         if (NBAccessibilityService.sIsInWork) {
+            if (!AppUtil.isPkgInstalled(StaticConst.sContext, pCurrentWorkInfo.pkg)) {
+                pCurrentWorkInfo.execstate = JsonAppInfo.EXC_STATE.DOWNLOADING;
+                doStart();
+                return;
+            }
             if (!AppUtil.isPkgForeground(StaticConst.sContext, pCurrentWorkInfo.pkg)) {
+                AppDebugLog.d(AppDebugLog.TAG_STALKER, "非前台，进行跳转，开启闹钟判断!");
                 AppUtil.jumpToApp(StaticConst.sContext, pCurrentWorkInfo);
                 // 开启后台计时服务
                 if (pCurrentWorkInfo.start != 0) {

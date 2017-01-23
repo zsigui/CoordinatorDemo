@@ -27,6 +27,7 @@
             </intent-filter >
             <intent-filter >
                 <action android:name = "com.luna.powersaver.gp.ACTION_CLOCK" />
+                <action android:name = "com.luna.powersaver.gp.ACTION_OPEN_RECORD" />
             </intent-filter >
         </receiver >
         <receiver
