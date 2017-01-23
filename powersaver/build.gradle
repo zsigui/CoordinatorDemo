@@ -1,8 +1,8 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion 24
+    buildToolsVersion "24.0.2"
 
     defaultConfig {
         minSdkVersion 15
@@ -17,6 +17,7 @@ android {
         buildConfigField 'boolean', 'FILE_DEBUG', 'false'
         buildConfigField 'String', 'XXTEA_KEY', '"scx91kxf04asdf06"'
         buildConfigField 'String', 'PROTOCOL_VERSION_CODE', '"1"'
+        buildConfigField 'String', 'APP_ID', '"a7ed9a056e78accc"'
     }
     buildTypes {
         release {

@@ -146,4 +146,8 @@ public class GPResId {
     public static String getSettingItemTitleId() { return ANDROID_PKG + ":id/title"; }
 
     public static String getSettingListViewId() { return ANDROID_PKG + ":id/listview"; }
+
+    public static String getDetailSettingHeaderId() { return SETTINGS_PKG + ":id/all_details"; }
+
+    public static String getDetailSettingPermissionSwitchId() { return INSTALLER_PKG + ":id/switchWidget"; }
 }

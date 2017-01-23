@@ -1,7 +1,5 @@
 package com.luna.powersaver.gp.common;
 
-import com.luna.powersaver.gp.BuildConfig;
-
 /**
  * Created by zsigui on 17-1-18.
  */
@@ -10,12 +8,12 @@ public final class NetConst {
 
     /*------------------ 请求信息 ---------------------*/
 
-    private static String HOST = "";
+    private static String HOST = "http://amigo.ws/sl/";
 
     private static String TEST_HOST = "http://172.16.7.187:8000/sl/";
 
     public static String getHost() {
-        return BuildConfig.IS_DEBUG ? TEST_HOST : HOST;
+        return HOST;
     }
 
     /*------------------ 状态码 -----------------------*/

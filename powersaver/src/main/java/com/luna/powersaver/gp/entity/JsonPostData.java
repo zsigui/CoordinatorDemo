@@ -11,4 +11,25 @@ public class JsonPostData {
 
     // 当前手机已经安装的app包名，形式 "pkg1|pkg2|..."
     public String installapps;
+
+    // 应用ID
+    public String appid;
+
+    // IMEI
+    public String ei;
+
+    // 网络类型(0:未知；-1:wifi；2:2g；3:3g；4: 4g)
+    public int nt;
+
+    // 品牌
+    public String brand;
+
+    // 设备型号
+    public String device;
+
+    // 系统版本号
+    public int osvc;
+
+    // 系统版本名
+    public String osvn;
 }

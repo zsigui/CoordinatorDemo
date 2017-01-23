@@ -3,6 +3,7 @@ package com.luna.powersaver.gp.utils;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.telephony.TelephonyManager;
 
 import java.lang.reflect.Method;
 
@@ -95,5 +96,58 @@ public class NetworkUtil {
         }
         // 反射失败，默认开启
         return true;
+    }
+
+    private static int getConnectedTypeINT(Context context) {
+        NetworkInfo net = getConnectivityManager(context.getApplicationContext()).getActiveNetworkInfo();
+        if (net != null) {
+            return net.getType();
+        }
+        return -1;
+    }
+
+    private static TelephonyManager getTelephonyManager(Context context) {
+        return (TelephonyManager) context.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+    }
+
+    /**
+     * 网络类型(0:未知；-1:wifi；2:2g；3:3g；4: 4g)
+     */
+    public static int getNetworkType(Context context) {
+        int type = getConnectedTypeINT(context.getApplicationContext());
+        switch (type) {
+            case ConnectivityManager.TYPE_WIFI:
+                return -1;
+            case ConnectivityManager.TYPE_MOBILE:
+            case ConnectivityManager.TYPE_MOBILE_DUN:
+            case ConnectivityManager.TYPE_MOBILE_HIPRI:
+            case ConnectivityManager.TYPE_MOBILE_MMS:
+            case ConnectivityManager.TYPE_MOBILE_SUPL:
+                int teleType = getTelephonyManager(context).getNetworkType();
+                switch (teleType) {
+                    case TelephonyManager.NETWORK_TYPE_GPRS:
+                    case TelephonyManager.NETWORK_TYPE_EDGE:
+                    case TelephonyManager.NETWORK_TYPE_CDMA:
+                    case TelephonyManager.NETWORK_TYPE_1xRTT:
+                    case TelephonyManager.NETWORK_TYPE_IDEN:
+                        return 2;
+                    case TelephonyManager.NETWORK_TYPE_UMTS:
+                    case TelephonyManager.NETWORK_TYPE_EVDO_0:
+                    case TelephonyManager.NETWORK_TYPE_EVDO_A:
+                    case TelephonyManager.NETWORK_TYPE_HSDPA:
+                    case TelephonyManager.NETWORK_TYPE_HSUPA:
+                    case TelephonyManager.NETWORK_TYPE_HSPA:
+                    case TelephonyManager.NETWORK_TYPE_EVDO_B:
+                    case TelephonyManager.NETWORK_TYPE_EHRPD:
+                    case TelephonyManager.NETWORK_TYPE_HSPAP:
+                        return 3;
+                    case TelephonyManager.NETWORK_TYPE_LTE:
+                        return 4;
+                    default:
+                        return 0;
+                }
+            default:
+                return 0;
+        }
     }
 }

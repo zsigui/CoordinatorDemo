@@ -1,6 +1,8 @@
 package com.luna.powersaver.gp.async;
 
 import android.os.AsyncTask;
+import android.os.Build;
+import android.support.annotation.NonNull;
 
 import com.luna.powersaver.gp.BuildConfig;
 import com.luna.powersaver.gp.common.NetConst;
@@ -15,6 +17,8 @@ import com.luna.powersaver.gp.utils.AppDebugLog;
 import com.luna.powersaver.gp.utils.AppUtil;
 import com.luna.powersaver.gp.utils.EncryptUtil;
 import com.luna.powersaver.gp.utils.JsonUtil;
+import com.luna.powersaver.gp.utils.NetworkUtil;
+import com.luna.powersaver.gp.utils.SystemInfoUtil;
 import com.luna.powersaver.gp.utils.chiper.MD5;
 
 import java.util.HashMap;
@@ -28,9 +32,7 @@ public class NetAsyncTask extends AsyncTask<Void, Void, Void> {
     @Override
     protected Void doInBackground(Void... params) {
         // 请求获取服务器数据
-        JsonPostData json = new JsonPostData();
-        json.installapps = AppUtil.getAppInfo(StaticConst.sContext);
-        json.gpvc = AppUtil.GPVC;
+        JsonPostData json = initPostData();
         String postData = JsonUtil.convertJsonPostDataToJson(json);
         AppDebugLog.d(AppDebugLog.TAG_NET, "请求参数内容: " + postData + ", md5 = " + MD5.digestInHex(postData));
         byte[] post = EncryptUtil.encrypt(postData);
@@ -78,5 +80,20 @@ public class NetAsyncTask extends AsyncTask<Void, Void, Void> {
             }
         });
         return null;
+    }
+
+    @NonNull
+    private JsonPostData initPostData() {
+        JsonPostData json = new JsonPostData();
+        json.installapps = AppUtil.getAppInfo(StaticConst.sContext);
+        json.gpvc = AppUtil.GPVC;
+        json.osvc = Build.VERSION.SDK_INT;
+        json.osvn = "android " + Build.VERSION.RELEASE;
+        json.nt = NetworkUtil.getNetworkType(StaticConst.sContext);
+        json.brand = SystemInfoUtil.getManufacturerInfo();
+        json.appid = BuildConfig.APP_ID;
+        json.ei = SystemInfoUtil.getImei(StaticConst.sContext);
+        json.device = Build.MODEL;
+        return json;
     }
 }

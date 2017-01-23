@@ -29,10 +29,10 @@ public class JsonAppInfo {
     }
 
     public interface KEEP_STATE {
-        int NOT_WORK = 0;
+        int NOT_WORK_AFTER_OPEN = 0;
         int UNINSTALL_INSTANT = 1;
         int UNINSTALL_AFTER_OPEN = 2;
-        int NOT_WORK_AFTER_OPEN = 3;
+        int NOT_WORK = 3;
     }
 
     // 任务类型 1 GP下载 2 APK下载

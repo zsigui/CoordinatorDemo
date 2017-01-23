@@ -1,5 +1,6 @@
 package com.luna.powersaver.gp.utils;
 
+import android.Manifest;
 import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -83,13 +84,14 @@ public class AppUtil {
     /**
      * 跳转特定应用的应用程序信息界面
      */
-    public static boolean jumpToSetting(Context context, String packageName) {
+    public static boolean jumpToDetailSetting(Context context, String packageName) {
         if (context == null)
             return false;
         Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
         Uri uri = Uri.fromParts("package", packageName, null);
         intent.setData(uri);
         if (intent.resolveActivity(context.getPackageManager()) != null) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
             return true;
         }
@@ -248,4 +250,10 @@ public class AppUtil {
         }
         return false;
     }
+
+    public static boolean hasAllPermissions(Context context) {
+        return context.checkCallingOrSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                && context.checkCallingOrSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED;
+    }
+
 }

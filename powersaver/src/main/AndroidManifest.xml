@@ -6,7 +6,8 @@
     <!-- 拦截系统锁屏,通过WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD无效 -->
     <uses-permission android:name = "android.permission.DISABLE_KEYGUARD" />
     <uses-permission android:name = "android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name = "android.permission.INTERNET" />
+    <uses-permission android:name = "android.permission.READ_PHONE_STATE" />
 
     <application
             android:supportsRtl = "true" >
@@ -24,9 +25,9 @@
                 <action android:name = "android.net.conn.CONNECTIVITY_CHANGE" />
                 <category android:name = "android.intent.category.DEFAULT" />
             </intent-filter >
-            <intent-filter>
-                <action android:name="com.luna.powersaver.gp.ACTION_CLOCK" />
-            </intent-filter>
+            <intent-filter >
+                <action android:name = "com.luna.powersaver.gp.ACTION_CLOCK" />
+            </intent-filter >
         </receiver >
         <receiver
                 android:name = "com.luna.powersaver.gp.receiver.PackageInstallReceiver" >
