@@ -155,7 +155,7 @@ public class TestView extends ViewGroup {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        Log.d("test", "motion event = " + ev.getActionMasked());
+        Log.d("testAddApkDownloadInfo", "motion event = " + ev.getActionMasked());
         if (isDrag && ev.getActionMasked() == MotionEvent.ACTION_MOVE) {
             return true;
         }
@@ -167,7 +167,7 @@ public class TestView extends ViewGroup {
             case MotionEvent.ACTION_MOVE:
                 int diffX = (int) Math.abs(ev.getX() - downX);
                 int diffY = (int) Math.abs(ev.getY() - downY);
-                Log.d("test", "diffY = " + diffY + ", diffX = " + diffX);
+                Log.d("testAddApkDownloadInfo", "diffY = " + diffY + ", diffX = " + diffX);
                 if (diffY > diffX) {
                     isDrag = true;
                     getParent().requestDisallowInterceptTouchEvent(true);

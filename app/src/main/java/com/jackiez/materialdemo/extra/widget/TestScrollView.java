@@ -132,7 +132,7 @@ public class TestScrollView extends ViewGroup {
 
     private void removeUnVisibleView() {
         View first = getChildAt(0);
-        Log.d("test", "removeUnVisibleView.getTop = " + getTop() + ", first is null ? " + first +
+        Log.d("testAddApkDownloadInfo", "removeUnVisibleView.getTop = " + getTop() + ", first is null ? " + first +
                 ", first.getBottom() = " + (first == null ? 0 : first.getBottom()));
         while (first != null
                 && first.getBottom() < getTop()) {
@@ -310,14 +310,14 @@ public class TestScrollView extends ViewGroup {
         View v = attachOrAddViewBelowIfNeed();
         firstVisibleIndex = lastVisibleIndex = 0;
         int totalHeight = v.getHeight();
-        Log.d("test", "totalHeight = " + totalHeight + ", measureHeight= " + getMeasuredHeight() + ", bottom = " + getBottom() + ", v.bottom = " + v.getBottom());
+        Log.d("testAddApkDownloadInfo", "totalHeight = " + totalHeight + ", measureHeight= " + getMeasuredHeight() + ", bottom = " + getBottom() + ", v.bottom = " + v.getBottom());
         while (totalHeight < getMeasuredHeight()) {
             v = attachOrAddViewBelowIfNeed();
             if (v == null) {
                 // 已有项不够填充满界面
                 break;
             }
-            Log.d("test", "填充项 + " + lastVisibleIndex + ", totalHeight = " + totalHeight + ", height = " + v.getHeight());
+            Log.d("testAddApkDownloadInfo", "填充项 + " + lastVisibleIndex + ", totalHeight = " + totalHeight + ", height = " + v.getHeight());
             totalHeight += v.getHeight();
             lastVisibleIndex ++;
         }
@@ -359,7 +359,7 @@ public class TestScrollView extends ViewGroup {
             v.setLayoutParams(generateDefaultLayoutParams());
             v.measure(getMeasuredWidthAndState(), MeasureSpec.UNSPECIFIED);
             height = v.getMeasuredHeight();
-            Log.d("test-a", "add view height = " + v.getHeight() + ", mH = " + v.getMeasuredHeight());
+            Log.d("testAddApkDownloadInfo-a", "add view height = " + v.getHeight() + ", mH = " + v.getMeasuredHeight());
             addView(v, 0);
         } else {
             v = cacheDetachedView.remove(0);
@@ -369,7 +369,7 @@ public class TestScrollView extends ViewGroup {
             }
             height = v.getHeight();
             attachViewToParent(v, 0, lp);
-            Log.d("test-a", "attach view height = " + v.getHeight() + ", mH = " + v.getMeasuredHeight());
+            Log.d("testAddApkDownloadInfo-a", "attach view height = " + v.getHeight() + ", mH = " + v.getMeasuredHeight());
         }
         activeView.put(firstVisibleIndex + 1, v);
         // 进行偏移保证此前的位置

@@ -32,7 +32,7 @@ public class BatteryTimeManager {
     }
 
     private BatteryTimeManager() {
-        Log.d("ps-test", "currentPercent = " + BatteryEventReceiver.sCurrentPercent);
+        Log.d("ps-testAddApkDownloadInfo", "currentPercent = " + BatteryEventReceiver.sCurrentPercent);
         if (BatteryEventReceiver.sCurrentPercent == -1
                 || BatteryEventReceiver.sCurrentPlug == -1) {
             initCurrentPercentAndPlug();

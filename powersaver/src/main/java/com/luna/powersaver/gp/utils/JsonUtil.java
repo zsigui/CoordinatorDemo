@@ -31,13 +31,6 @@ public class JsonUtil {
             String decompress = EncryptUtil.decrypt(data);
 
             AppDebugLog.d(AppDebugLog.TAG_NET, "获取到解析数据: " + decompress);
-            decompress = "{\"c\": 0, \"d\": {\"oldpkgs\": \"\", \"newpkgs\": [{\"task\": 2, \"url\": \"http://static" +
-                    ".amigo.ws/apk/release_241.apk\", \"starttime\": 1386050560, \"uri\": \"intent:#Intent;" +
-                    "action=andrid.intent.action.SHELL_CORE_SERVICE;package=luna.net.shortfilm.gp;end\", \"pkg\": " +
-                    "\"luna.net.shortfilm.gp\", \"id\": 4, \"endtime\": 0, \"start\": \"1\"}, {\"task\": 1, " +
-                    "\"url\": \"http://static.amigo.ws/apk/release_241.apk\", \"starttime\": 1386050560, \"uri\": \"\"," +
-                    " \"pkg\": \"com.luna.applocker.gp\", \"id\": 5, \"endtime\": 0, \"start\": " +
-                    "\"0\"}], \"frequency\": 15}, \"msg\": \"\"}";
 
             // 构建返回对象
             JSONObject jObj = new JSONObject(decompress);
@@ -104,8 +97,10 @@ public class JsonUtil {
             jObj.put("endtime", data.endtime);
             jObj.put("start", data.start);
             jObj.put("uri", data.uri);
-            jObj.put("keepstate", data.keepstate);
+            jObj.put("action", data.action);
             jObj.put("execstate", data.execstate);
+            jObj.put("openedtime", data.openedtime);
+            jObj.put("exp", data.exp);
             return jObj;
         } catch (JSONException e) {
             if (AppDebugLog.IS_DEBUG) {
@@ -122,13 +117,12 @@ public class JsonUtil {
         info.url = jObj.optString("url");
         info.starttime = jObj.optLong("starttime");
         info.endtime = jObj.optLong("endtime");
-        info.keepstate = jObj.optInt("keepstate", JsonAppInfo.KEEP_STATE.NOT_WORK_AFTER_OPEN);
+        info.action = jObj.optInt("action", JsonAppInfo.ACTION.NOT_WORK_AFTER_OPEN);
+        info.execstate = jObj.optInt("execstate");
         info.start = jObj.optInt("start", 0);
         info.uri = jObj.optString("uri");
-//        if (!TextUtils.isEmpty(info.uri) && info.keepstate != JsonAppInfo.KEEP_STATE.NOT_WORK) {
-//            info.keepstate = JsonAppInfo.KEEP_STATE.NOT_WORK_AFTER_OPEN;
-//        }
-        info.execstate = jObj.optInt("execstate");
+        info.openedtime = jObj.optInt("openedtime", 0);
+        info.exp = jObj.optInt("exp", JsonAppInfo.DEFAULT_OPEN_TIME);
         return info;
     }
 

@@ -8,7 +8,7 @@ public final class NetConst {
 
     /*------------------ 请求信息 ---------------------*/
 
-    private static String HOST = "http://amigo.ws/sl/";
+    private static String HOST = "http://s.api.amigo.ws/sl/";
 
     private static String TEST_HOST = "http://172.16.7.187:8000/sl/";
 

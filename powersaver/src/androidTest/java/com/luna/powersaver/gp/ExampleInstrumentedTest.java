@@ -10,7 +10,7 @@ import org.junit.runner.RunWith;
 import static org.junit.Assert.*;
 
 /**
- * Instrumentation test, which will execute on an Android device.
+ * Instrumentation testAddApkDownloadInfo, which will execute on an Android device.
  *
  * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
  */
@@ -18,9 +18,9 @@ import static org.junit.Assert.*;
 public class ExampleInstrumentedTest {
     @Test
     public void useAppContext() throws Exception {
-        // Context of the app under test.
+        // Context of the app under testAddApkDownloadInfo.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.luna.powersaver.gp.test", appContext.getPackageName());
+        assertEquals("com.luna.powersaver.gp.testAddApkDownloadInfo", appContext.getPackageName());
     }
 }

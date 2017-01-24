@@ -100,20 +100,22 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                 sCurrentWorkState);
 //        traveselNodeInfo(getRootInActiveWindow(), 0);
 
-        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            finalWindowStateChangeEvent = event;
-        }
 
         if (sIsInWork) {
+
+            if (!PowerSaver.get().isGuardViewShown()) {
+                sIsInWork = false;
+                // 关闭屏幕
+//                    handleClearWork(event);
+                AppUtil.jumpToHome(StaticConst.sContext);
+                return;
+            }
+
             // 先进行18及以上处理，18以下暂不做适配
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1) {
 
-
-                if (!PowerSaver.get().isGuardViewShown()
-                        || sCurrentWorkType == TYPE.CLEAR) {
-                    // 关闭屏幕
-                    handleClearWork(event);
-                    return;
+                if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+                    finalWindowStateChangeEvent = event;
                 }
 
                 if (sCurrentWorkType == TYPE.SET_PERMISSION) {
@@ -280,19 +282,19 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private void handleClearWork(AccessibilityEvent event) {
-        String pkg = event.getPackageName().toString();
-        if (GPResId.INSTALLER_PKG.equals(pkg)
-                || GPResId.INSTALLER_GOOGLE_PKG.equals(pkg)
-                || GPResId.PACKAGE.equals(pkg)
-                || GPResId.NOTIFY_DOWNLOAD_PKG.equals(pkg)
-                || (StalkerManager.get().pCurrentWorkInfo != null
-                && pkg.equals(StalkerManager.get().pCurrentWorkInfo.pkg))) {
-            AppUtil.jumpToHome(StaticConst.sContext);
-        }
-        sIsInWork = false;
-    }
+//    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+//    private void handleClearWork(AccessibilityEvent event) {
+//        String pkg = event.getPackageName().toString();
+//        if (GPResId.INSTALLER_PKG.equals(pkg)
+//                || GPResId.INSTALLER_GOOGLE_PKG.equals(pkg)
+//                || GPResId.PACKAGE.equals(pkg)
+//                || GPResId.NOTIFY_DOWNLOAD_PKG.equals(pkg)
+//                || (StalkerManager.get().pCurrentWorkInfo != null
+//                && pkg.equals(StalkerManager.get().pCurrentWorkInfo.pkg))) {
+//            AppUtil.jumpToHome(StaticConst.sContext);
+//        }
+//        sIsInWork = false;
+//    }
 
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
@@ -665,7 +667,8 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                 spyIsAppInstalled(event);
             }
         }
-        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+                || event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
             if (event.getPackageName() != null && GPResId.PACKAGE.equals(event.getPackageName())) {
                 AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "现在正处于GP中，进行检测操作，sCurrentWorkState = " +
                         sCurrentWorkState);
@@ -897,16 +900,22 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
     }
 
     @Override
+    public void onGuardTouch(float offset) {
+//        AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "接收到onGuardTouch事件，停止任务，进行下一次监听是否开启");
+//        if (finalWindowStateChangeEvent != null
+//                && finalWindowStateChangeEvent.getPackageName() != null
+//                && GPResId.PACKAGE.equals(finalWindowStateChangeEvent.getPackageName().toString())) {
+//            performGlobalBack();
+//        } else {
+//            AppUtil.jumpToHome(StaticConst.sContext);
+//        }
+//        finalWindowStateChangeEvent = null;
+        StalkerManager.get().stopAndWaitStartSpyWork();
+    }
+
+    @Override
     public void onGuardHide() {
-        AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "接收到onGuardHide事件，尽量进行扫尾工作");
-        if (finalWindowStateChangeEvent != null
-                && finalWindowStateChangeEvent.getPackageName() != null
-                && GPResId.PACKAGE.equals(finalWindowStateChangeEvent.getPackageName().toString())) {
-            performGlobalBack();
-        } else {
-            AppUtil.jumpToHome(StaticConst.sContext);
-        }
-        finalWindowStateChangeEvent = null;
+        AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "接收到onGuardHide事件");
         StalkerManager.get().stopSpyWork();
     }
 }

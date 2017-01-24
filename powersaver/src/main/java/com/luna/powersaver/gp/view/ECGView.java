@@ -172,9 +172,9 @@ public class ECGView extends View implements Runnable {
                 }
                 break;
             case TYPE_VIOLENT:
-                Log.w("test", "初始化，width = " +getMeasuredWidth());
+                Log.w("testAddApkDownloadInfo", "初始化，width = " +getMeasuredWidth());
                 while (x <= getMeasuredWidth()) {
-                Log.w("test", "初始化，width = " + x);
+                Log.w("testAddApkDownloadInfo", "初始化，width = " + x);
                     x += X_MOVE_DIFF;
                     mPoints.add(new Point(x, (int) ((Math.random() * MAX_Y_DIFF * 2) - MAX_Y_DIFF)));
                 }
@@ -198,22 +198,22 @@ public class ECGView extends View implements Runnable {
         }
 
         int i = 0;
-//        Log.d("test", "当前pointSize = " + mPoints.size() + ", xChange = " + xChange + ", y = " + baselineValue
+//        Log.d("testAddApkDownloadInfo", "当前pointSize = " + mPoints.size() + ", xChange = " + xChange + ", y = " + baselineValue
 //                + ", getMeasureWidth = " + getMeasuredWidth() + ", getMeasureHeight = " + getMeasuredHeight());
         Point p = mPoints.get(i++);
         mECGPath = new Path();
         mECGPath.moveTo(p.x + xChange, p.y + baselineValue);
-//        Log.d("test", "move to x = " + (p.x + xChange) + ", y = " + (p.y + baselineValue));
+//        Log.d("testAddApkDownloadInfo", "move to x = " + (p.x + xChange) + ", y = " + (p.y + baselineValue));
         for (; i < mPoints.size(); i++) {
             p = mPoints.get(i);
             mECGPath.lineTo(p.x + xChange, p.y + baselineValue);
-//            Log.d("test", "line to x = " + (p.x + xChange) + ", y = " + (p.y + baselineValue));
+//            Log.d("testAddApkDownloadInfo", "line to x = " + (p.x + xChange) + ", y = " + (p.y + baselineValue));
         }
         postInvalidate();
 
         xChange -= X_MOVE_DIFF;
         handleChangePoint();
-//        Log.d("test", "当前xChange = " + xChange);
+//        Log.d("testAddApkDownloadInfo", "当前xChange = " + xChange);
         mHandler.postDelayed(this, INVALIDATE_TIME_DIFF);
     }
 

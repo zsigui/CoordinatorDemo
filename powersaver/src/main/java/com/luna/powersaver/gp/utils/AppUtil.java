@@ -1,6 +1,7 @@
 package com.luna.powersaver.gp.utils;
 
 import android.Manifest;
+import android.accessibilityservice.AccessibilityServiceInfo;
 import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -11,15 +12,19 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 import android.text.TextUtils;
+import android.view.accessibility.AccessibilityManager;
 
 import com.jaredrummler.android.processes.AndroidProcesses;
 import com.jaredrummler.android.processes.models.AndroidAppProcess;
+import com.luna.powersaver.gp.BuildConfig;
 import com.luna.powersaver.gp.common.GPResId;
 import com.luna.powersaver.gp.entity.JsonAppInfo;
 
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.List;
+
+import static android.content.Context.ACCESSIBILITY_SERVICE;
 
 /**
  * Created by zsigui on 17-1-18.
@@ -257,4 +262,15 @@ public class AppUtil {
                 && context.checkCallingOrSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED;
     }
 
+    public static boolean isAccessibleEnabled(Context context) {
+        List<AccessibilityServiceInfo> infos = ((AccessibilityManager) context.getSystemService(ACCESSIBILITY_SERVICE))
+                .getEnabledAccessibilityServiceList(-1);
+        final String service = context.getPackageName() + "/" + BuildConfig.APPLICATION_ID + ".service.NBAccessibilityService";
+        for (AccessibilityServiceInfo info : infos) {
+            if (info.getId().equals(service)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

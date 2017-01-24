@@ -68,7 +68,7 @@ public class GCMonthDateView extends MonthDateView {
         bpPaint = new Paint();
         bpPaint.setAntiAlias(true);
         bpPaint.setStyle(Paint.Style.FILL);
-        Log.d("test", "dateBgHeight = " + dateBgHeight);
+        Log.d("testAddApkDownloadInfo", "dateBgHeight = " + dateBgHeight);
     }
 
     @Override

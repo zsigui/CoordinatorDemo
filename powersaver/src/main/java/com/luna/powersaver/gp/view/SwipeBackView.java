@@ -122,6 +122,7 @@ public class SwipeBackView extends FrameLayout {
                 mLastX = ev.getX();
                 clearOrCreateTrackerIfNotExist();
                 mTracker.addMovement(ev);
+                mNestListener.onSwipe(0);
                 break;
             case MotionEvent.ACTION_MOVE:
                 createTrackerIfNotExist();
@@ -216,7 +217,7 @@ public class SwipeBackView extends FrameLayout {
 //                child.setTranslationX(newVal);
 //                if (mCurTranslateX == mTotalTranslateX
 //                        || mCurTranslateX == 0) {
-//                    Log.d("test-spw", "mCurrentX = " + mCurTranslateX);
+//                    Log.d("testAddApkDownloadInfo-spw", "mCurrentX = " + mCurTranslateX);
 //                    handleSwipeAnimator();
 //                } else {
 //                    mNestListener.onSwipe(mCurTranslateX / mTotalTranslateX);

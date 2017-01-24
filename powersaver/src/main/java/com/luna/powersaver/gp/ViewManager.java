@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Looper;
 import android.text.Html;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -36,7 +37,7 @@ class ViewManager {
     private static final int UPDATE_INTERVAL = 1000;
     private SwipeBackView mContentView;
     private ViewHolder mViewHolder;
-    private Handler mHandler = new Handler();
+    private Handler mHandler = new Handler(Looper.getMainLooper());
 
     class UpdateRunnable implements Runnable {
 
@@ -110,6 +111,7 @@ class ViewManager {
         mContentView.setListener(new SwipeBackView.SwipeBackListener() {
             @Override
             public void onSwipe(float offset) {
+                PowerSaver.get().notifyTouchCallback(offset);
             }
 
             @Override

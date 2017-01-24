@@ -9,9 +9,7 @@ import android.content.IntentFilter;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
-import com.luna.powersaver.gp.PowerSaver;
 import com.luna.powersaver.gp.common.StaticConst;
-import com.luna.powersaver.gp.manager.BatteryTimeManager;
 import com.luna.powersaver.gp.manager.ClockManager;
 import com.luna.powersaver.gp.receiver.BatteryEventReceiver;
 import com.luna.powersaver.gp.utils.AppDebugLog;
@@ -54,9 +52,9 @@ public class GuardService extends Service {
         sIsRunningThisService = true;
         sendWakeUpClock();
         AppDebugLog.d(TAG, "onStartCommand:GuardService is Running!");
-        if (BatteryTimeManager.get().isCharging()) {
-            PowerSaver.get().showGuardView(this);
-        }
+//        if (BatteryTimeManager.get().isCharging()) {
+//            PowerSaver.get().showGuardView(this);
+//        }
         ClockManager.get().startAlarmImmediately(this);
         return super.onStartCommand(intent, flags, startId);
     }

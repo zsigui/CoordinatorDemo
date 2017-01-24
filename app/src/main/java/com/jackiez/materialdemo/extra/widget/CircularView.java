@@ -86,9 +86,9 @@ public class CircularView extends LinearLayout {
                     type = mAdapter.getItemViewType(i);
                     holder = mAdapter.onCreateHolder(this, type);
                     if (holder != null) {
-                        Log.d("test-view", i + " : height = " + holder.itemView.getMeasuredHeight());
+                        Log.d("testAddApkDownloadInfo-view", i + " : height = " + holder.itemView.getMeasuredHeight());
                         holder.itemView.measure(widthMeasureSpec, mHeight);
-                        Log.d("test-view", i + " : height = " + holder.itemView.getMeasuredHeight());
+                        Log.d("testAddApkDownloadInfo-view", i + " : height = " + holder.itemView.getMeasuredHeight());
                         totalHeight += holder.itemView.getMeasuredHeight();
                         mShowingViews.add(holder.itemView);
                         mShowingViewPosition.add(i);

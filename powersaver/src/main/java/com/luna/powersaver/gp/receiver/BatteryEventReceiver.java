@@ -23,7 +23,7 @@ public class BatteryEventReceiver extends BroadcastReceiver {
     public static int sCurrentPlug = -1;
     public static boolean sIsQuickCharge;
 
-    public static final String TAG = "ps-test";
+    public static final String TAG = "ps-testAddApkDownloadInfo";
 
     private boolean isFirstQuickCharge = true;
     private boolean isFirstContinuousCharge = true;

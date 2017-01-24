@@ -175,7 +175,7 @@ public class MonthDateView extends View {
         if (((getMeasuredWidth() != dateBgWidth) || getMeasuredHeight() != (dateBgHeight + weekendHeight))
                 && (dateBgWidth != 0 && (dateBgHeight + weekendHeight != 0))) {
             setMeasuredDimension(this.dateBgWidth, this.dateBgHeight + weekendHeight);
-            Log.d("test", "width = " + this.dateBgWidth + ", height = " + dateBgHeight + ", cw = " + cellWidth + ", ch = " + cellHeight);
+            Log.d("testAddApkDownloadInfo", "width = " + this.dateBgWidth + ", height = " + dateBgHeight + ", cw = " + cellWidth + ", ch = " + cellHeight);
         }
     }
 

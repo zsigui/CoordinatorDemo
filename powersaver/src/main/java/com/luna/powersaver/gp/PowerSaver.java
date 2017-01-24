@@ -3,6 +3,9 @@ package com.luna.powersaver.gp;
 import android.content.Context;
 import android.util.SparseArray;
 
+import com.luna.powersaver.gp.common.StaticConst;
+import com.luna.powersaver.gp.service.GuardService;
+
 /**
  * 屏保对外调用的门面
  *
@@ -12,6 +15,8 @@ import android.util.SparseArray;
  */
 public class PowerSaver {
 
+    private static boolean isInit = false;
+
     private static PowerSaver sInstance = new PowerSaver();
 
     private SparseArray<StateChangeCallback> mCallbacks = new SparseArray<>();
@@ -20,6 +25,9 @@ public class PowerSaver {
     }
 
     public static PowerSaver get() {
+        if (!isInit) {
+            throw new IllegalStateException("Need to call init() first!");
+        }
         return sInstance;
     }
 
@@ -33,6 +41,19 @@ public class PowerSaver {
         if (callback == null)
             return;
         mCallbacks.remove(callback.hashCode());
+    }
+
+    /**
+     * 初始化调用请先调用该方法，最好在 Application.onCreate() 中进行调用
+     */
+    public static void init(Context context) {
+        if (isInit) return;
+        if (context == null) {
+            throw new IllegalArgumentException("Context is not allow null!");
+        }
+        StaticConst.sContext = context.getApplicationContext() != null ? context : context.getApplicationContext();
+        GuardService.testAliveAndCreateIfNot(StaticConst.sContext);
+        isInit = true;
     }
 
     /**
@@ -50,6 +71,15 @@ public class PowerSaver {
     private void notifyHideCallback() {
         for (int i = 0; i < mCallbacks.size(); i++) {
             mCallbacks.valueAt(i).onGuardHide();
+        }
+    }
+
+    /**
+     * 通知所有监听者现在触摸中，已滑动比例
+     */
+    void notifyTouchCallback(float offset) {
+        for (int i = 0; i < mCallbacks.size(); i++) {
+            mCallbacks.valueAt(i).onGuardTouch(offset);
         }
     }
 
@@ -100,6 +130,8 @@ public class PowerSaver {
     public interface StateChangeCallback {
 
         void onGuardShow();
+
+        void onGuardTouch(float offset);
 
         void onGuardHide();
     }

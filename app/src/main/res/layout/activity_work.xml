@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android = "http://schemas.android.com/apk/res/android"
+              xmlns:tools = "http://schemas.android.com/tools"
+              xmlns:app = "http://schemas.android.com/apk/res-auto"
+              android:orientation = "vertical"
+              android:layout_width = "match_parent"
+              android:layout_height = "match_parent" >
+
+    <ScrollView
+            android:layout_width = "match_parent"
+            android:layout_height = "wrap_content"
+            app:layout_behavior = "@string/appbar_scrolling_view_behavior"
+            >
+
+        <LinearLayout
+                android:orientation = "vertical"
+                android:layout_width = "match_parent"
+                android:layout_height = "wrap_content"
+                >
+
+
+            <android.support.v7.widget.CardView
+                    android:layout_gravity = "center"
+                    android:layout_width = "match_parent"
+                    android:layout_height = "wrap_content"
+                    android:layout_margin = "8dp"
+                    >
+
+                <LinearLayout
+                        android:layout_width = "match_parent"
+                        android:layout_height = "wrap_content"
+                        android:orientation = "vertical"
+                        tools:ignore = "RtlHardcoded"
+                        >
+
+                    <TextView
+                            android:layout_width = "match_parent"
+                            android:layout_height = "wrap_content"
+                            android:text = "锁屏 DEMO (执行判断间隔: 30s，打开判断间隔: 30s)"
+                            android:textAppearance = "@style/TextAppearance.Header"
+                            android:paddingRight = "8dp"
+                            android:paddingLeft = "8dp"
+                            style = "@style/TextComponent.ItemRow"
+                            />
+
+                    <TextView
+                            android:id = "@+id/add_apk_download"
+                            android:layout_width = "match_parent"
+                            android:layout_height = "wrap_content"
+                            android:text = "添加重置APK下载任务"
+                            android:textAppearance = "@style/TextAppearance.ItemExample"
+                            android:drawableRight = "@drawable/ic_arrow_forward_24dp"
+                            style = "@style/TextComponent.ItemRow.Selectable" />
+
+                    <TextView
+                            android:id = "@+id/add_gp_download"
+                            android:layout_width = "match_parent"
+                            android:layout_height = "wrap_content"
+                            android:text = "添加重置GP下载任务"
+                            android:textAppearance = "@style/TextAppearance.ItemExample"
+                            android:drawableRight = "@drawable/ic_arrow_forward_24dp"
+                            style = "@style/TextComponent.ItemRow.Selectable" />
+
+                    <TextView
+                            android:id = "@+id/jump_set_accessibility"
+                            android:layout_width = "match_parent"
+                            android:layout_height = "wrap_content"
+                            android:text = "跳转设置无障碍权限"
+                            android:textAppearance = "@style/TextAppearance.ItemExample"
+                            android:drawableRight = "@drawable/ic_arrow_forward_24dp"
+                            style = "@style/TextComponent.ItemRow.Selectable" />
+
+                    <TextView
+                            android:id = "@+id/clear_data"
+                            android:layout_width = "match_parent"
+                            android:layout_height = "wrap_content"
+                            android:text = "清除下载记录"
+                            android:textAppearance = "@style/TextAppearance.ItemExample"
+                            android:drawableRight = "@drawable/ic_arrow_forward_24dp"
+                            style = "@style/TextComponent.ItemRow.Selectable" />
+
+                    <TextView
+                            android:id = "@+id/wake_guard"
+                            android:layout_width = "match_parent"
+                            android:layout_height = "wrap_content"
+                            android:text = "主动唤起屏保"
+                            android:textAppearance = "@style/TextAppearance.ItemExample"
+                            android:drawableRight = "@drawable/ic_arrow_forward_24dp"
+                            style = "@style/TextComponent.ItemRow.Selectable" />
+
+                </LinearLayout >
+            </android.support.v7.widget.CardView >
+
+        </LinearLayout >
+    </ScrollView >
+
+    <!--<ScrollView-->
+            <!--android:layout_width = "match_parent"-->
+            <!--android:layout_height = "wrap_content"-->
+            <!--android:minHeight = "300dp" >-->
+
+        <!--<TextView-->
+                <!--android:id = "@+id/note"-->
+                <!--android:layout_width = "match_parent"-->
+                <!--android:layout_height = "300dp"-->
+                <!--android:hint = "简单Log信息" />-->
+    <!--</ScrollView >-->
+</LinearLayout >

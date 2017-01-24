@@ -227,7 +227,7 @@ public class MiClockView extends View {
         inRingStrokeWidth *= scale;
         textSize *= scale;
 
-        Log.e("test", "dashWidth = " + dashWidth);
+        Log.e("testAddApkDownloadInfo", "dashWidth = " + dashWidth);
     }
 
     private void initOutRing() {

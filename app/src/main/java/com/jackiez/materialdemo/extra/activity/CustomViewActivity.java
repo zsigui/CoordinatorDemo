@@ -16,12 +16,12 @@ import android.widget.ListView;
 import com.jackiez.materialdemo.R;
 import com.jackiez.materialdemo.extra.widget.MonthDateView;
 import com.jackiez.materialdemo.extra.widget.SwipeBackView;
-import com.luna.powersaver.gp.view.ECGView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 /**
  * Created by zsigui on 16-12-13.
@@ -30,8 +30,6 @@ import java.util.Map;
 public class CustomViewActivity extends AppCompatActivity implements SwipeBackView.SwipeBackListener {
 
     MonthDateView mdv;
-
-    ECGView mECGView;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -68,7 +66,6 @@ public class CustomViewActivity extends AppCompatActivity implements SwipeBackVi
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mECGView.stopAnim();
     }
 
     private List<Map<String, Object>> getData() {
@@ -90,12 +87,12 @@ public class CustomViewActivity extends AppCompatActivity implements SwipeBackVi
 
     @Override
     public void onSwipe(float offset) {
-        Log.d("test", "当前位置：" + offset);
+        Log.d("testAddApkDownloadInfo", "当前位置：" + offset);
     }
 
     @Override
     public void onFinishSwipe() {
-        Log.d("test", "完成滑动滚出!");
+        Log.d("testAddApkDownloadInfo", "完成滑动滚出!");
 
     }
 

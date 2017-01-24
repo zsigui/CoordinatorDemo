@@ -6,6 +6,12 @@ package com.luna.powersaver.gp.entity;
 
 public class JsonAppInfo {
 
+    /**
+     * 默认至少需要打开的时间，单位 s
+     */
+//    public static final int DEFAULT_OPEN_TIME = 5 * 60;
+    public static final int DEFAULT_OPEN_TIME = 30;
+
     public interface TASK {
         int DOWNLOAD_BY_GP = 1;
         int DOWNLOAD_BY_APK = 2;
@@ -28,11 +34,29 @@ public class JsonAppInfo {
         int DISCARD = 6;
     }
 
-    public interface KEEP_STATE {
-        int NOT_WORK_AFTER_OPEN = 0;
-        int UNINSTALL_INSTANT = 1;
-        int UNINSTALL_AFTER_OPEN = 2;
-        int NOT_WORK = 3;
+    public interface ACTION {
+        /**
+         * 下载后不操作
+         */
+        int NOT_WORK = 0;
+        /**
+         * 安装后不操作
+         */
+
+        int NOT_WORK_AFTER_INSTALL = 2;
+        /**
+         * 安装后卸载
+         */
+        int UNINSTALL_AFTER_INSTALL = 3;
+        /**
+         * 打开后不操作
+         */
+        int NOT_WORK_AFTER_OPEN = 4;
+        /**
+         * 打开后卸载
+         */
+        int UNINSTALL_AFTER_OPEN = 5;
+
     }
 
     // 任务类型 1 GP下载 2 APK下载
@@ -53,6 +77,17 @@ public class JsonAppInfo {
     //
     public String uri;
 
+    // 行为模式
+    public int action = ACTION.NOT_WORK;
+    // 执行完毕后的操作 0 : 不操作(默认) 1 : 返回桌面  P.S.(这个有点奇怪，先忽略吧)
+    public int endaction = 1;
+    // 最少需要开启时间，单位(s)
+    public int exp;
+    // 已经开启时间，单位(s)
+    public int openedtime = 0;
+
+    public int execstate = EXC_STATE.WAIT_TO_DOWNLOAD;
+
     // 启动方式 0 Activity 1 Service 2 Broadcast
     public int start;
 
@@ -61,10 +96,5 @@ public class JsonAppInfo {
     public String searchkey;
     // 应用名称，用于匹配搜索结果
     public String appname;
-    public int keepstate = KEEP_STATE.NOT_WORK;
-    // 开启时间，单位(s)
-    public int opentime;
-
-    public int execstate = EXC_STATE.WAIT_TO_DOWNLOAD;
 
 }
