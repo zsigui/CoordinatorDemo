@@ -291,6 +291,7 @@ public class DownloadManager implements DownloadInfo.DownloadListener{
                         info.setIsDownload(true);
                         if (!mTotalDownloadMap.containsKey(info.getDownloadUrl())) {
                             mTotalDownloadMap.put(info.getDownloadUrl(), info);
+                            writeConfigFile(new File(mDirPath, CONFIG_FILE), mTotalDownloadMap);
                         }
                         if (!mWaitDownloadQueue.contains(info)) {
                             mWaitDownloadQueue.add(info);
