@@ -34,6 +34,9 @@ public class AppUtil {
 
     public static int GPVC = -1;
 
+    /**
+     * 获取手机上已安装应用列表，使用“|”将包名分割
+     */
     public static String getAppInfo(Context context) {
         if (context == null)
             return "";
@@ -103,7 +106,11 @@ public class AppUtil {
         return false;
     }
 
-
+    /**
+     * 调用系统的安装服务安装特定应用
+     * @param context
+     * @param destFile 指定待安装APK
+     */
     public static void install(Context context, File destFile) {
         try {
             if (destFile == null || !destFile.exists()) {
@@ -125,6 +132,9 @@ public class AppUtil {
         }
     }
 
+    /**
+     * 判断文件是否是处于机身内存中
+     */
     public static boolean checkIfDataDir(String dirPath) {
         boolean res = false;
         if (dirPath.startsWith("/data/")) {
@@ -133,6 +143,12 @@ public class AppUtil {
         return res;
     }
 
+    /**
+     * 判断特定应用是否被安装
+     * @param context
+     * @param pkgName 指定应用的包名
+     * @return
+     */
     public static boolean isPkgInstalled(Context context, String pkgName) {
         PackageInfo packageInfo;
         try {
@@ -144,6 +160,13 @@ public class AppUtil {
         return packageInfo != null;
     }
 
+    /**
+     * 构造安装APK的Intent
+     *
+     * @param context
+     * @param filePath APK文件所在的位置路径
+     * @return
+     */
     public static Intent getInstallApkIntentByApkFilePath(Context context, String filePath) {
         try {
             if (filePath == null) {
@@ -163,6 +186,11 @@ public class AppUtil {
         return null;
     }
 
+    /**
+     * 安装指定的APK文件
+     * @param context
+     * @param filePath APK文件所在的位置路径
+     */
     public static void InstallApkByFilePath(Context context, String filePath) {
         if (filePath == null) {
             return;
@@ -177,6 +205,11 @@ public class AppUtil {
 
     }
 
+    /**
+     * 卸载指定应用
+     * @param context
+     * @param pkgName 指定应用的包名
+     */
     public static void uninstall(Context context, String pkgName) {
         try {
             Uri packageURI = Uri.parse("package:" + pkgName);
@@ -190,6 +223,12 @@ public class AppUtil {
         }
     }
 
+    /**
+     * 执行根据应用信息打开APP的操作
+     *
+     * @param context
+     * @param info 要操作的应用信息
+     */
     public static void jumpToApp(Context context, JsonAppInfo info) {
         AppDebugLog.d(AppDebugLog.TAG_STALKER, "执行跳转APP任务");
         if (context == null || info == null)
@@ -222,6 +261,12 @@ public class AppUtil {
         }
     }
 
+    /**
+     * 直接打开特定的应用
+     *
+     * @param context
+     * @param pkg 要打开的应用包名
+     */
     private static void jumpToApp(Context context, String pkg) {
         AppDebugLog.d(AppDebugLog.TAG_STALKER, "默认跳转APP方式");
         Intent intent = context.getPackageManager().getLaunchIntentForPackage(pkg);
@@ -229,6 +274,10 @@ public class AppUtil {
         context.startActivity(intent);
     }
 
+    /**
+     * 跳转到手机的主界面，类似虚拟按钮“HOME”效果
+     * @param context
+     */
     public static void jumpToHome(Context context) {
         Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_HOME);
@@ -236,6 +285,12 @@ public class AppUtil {
         context.startActivity(intent);
     }
 
+    /**
+     * 判断指定应用是否处于前台位置
+     * @param context
+     * @param pkg 指定应用的包名
+     * @return
+     */
     public static boolean isPkgForeground(Context context, String pkg) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             // 21 以前使用判断应用是否处于前台
@@ -257,11 +312,17 @@ public class AppUtil {
         return false;
     }
 
+    /**
+     * 判断应用是否具有所需的所有权限
+     */
     public static boolean hasAllPermissions(Context context) {
         return context.checkCallingOrSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
                 && context.checkCallingOrSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED;
     }
 
+    /**
+     * 判断本身是否具有辅助功能
+     */
     public static boolean isAccessibleEnabled(Context context) {
         List<AccessibilityServiceInfo> infos = ((AccessibilityManager) context.getSystemService(ACCESSIBILITY_SERVICE))
                 .getEnabledAccessibilityServiceList(-1);

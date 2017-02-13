@@ -31,7 +31,7 @@ import java.util.Locale;
  * @date 2016/12/26
  */
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-public class NBAccessibilityService extends AccessibilityService implements PowerSaver.StateChangeCallback {
+public class NBAccessibilityService extends SelfDefenceAccessibilityService implements PowerSaver.StateChangeCallback {
 
 
     // 该状态表明当前是否正处于完成任务状态
@@ -99,8 +99,13 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                 + ", isWork = " + sIsInWork + ", sCurrentType = " + sCurrentWorkType + ", sCurrentState = " +
                 sCurrentWorkState);
 //        traveselNodeInfo(getRootInActiveWindow(), 0);
-
-
+//        if (sIsInWork && Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1) {
+//            AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "开始进行判断！");
+//            if (!isHandleRetry(event)) {
+////                handleDownloadWorkByGp(event);
+//            }
+//        }
+        super.onAccessibilityEvent(event);
         if (sIsInWork) {
 
             if (!PowerSaver.get().isGuardViewShown()) {
@@ -788,8 +793,7 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private boolean isHandleRetry(AccessibilityEvent event) {
-        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
-                && GPResId.PACKAGE.equals(event.getPackageName().toString())) {
+        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
             AccessibilityNodeInfo source = getRootInActiveWindow();
             if (source != null) {
                 AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "开始检查是否有重试按钮");
@@ -813,6 +817,17 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
                     // 退出执行
                     StalkerManager.get().doNextStartAfterError(0, "重试超时失败");
                     return true;
+                }
+                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "判断是否需要同意条款");
+                nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getAgreementPositiveBtnId());
+                if (nodes != null && nodes.size() > 0) {
+                    AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "需要先同意条款");
+                    AccessibilityNodeInfo info = nodes.get(0);
+                    if (info != null && info.isClickable()) {
+                        boolean result = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                        AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "执行同意条款结果：" + result);
+                        return result;
+                    }
                 }
             }
         }
@@ -886,11 +901,6 @@ public class NBAccessibilityService extends AccessibilityService implements Powe
             AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, spaceCount.toString() + "null");
         }
         return false;
-    }
-
-    @Override
-    public void onInterrupt() {
-        AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "NBAccessibilityService.onInterrupt!");
     }
 
     @Override

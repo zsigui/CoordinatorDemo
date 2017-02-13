@@ -55,6 +55,8 @@ public class GPResId {
         return PACKAGE + ":id/title_title";
     }
 
+    public static String getAgreementPositiveBtnId() { return PACKAGE + ":id/positive_button"; }
+
     public static String getContinueBarId() {
         return PACKAGE + ":id/continue_button_bar";
     }

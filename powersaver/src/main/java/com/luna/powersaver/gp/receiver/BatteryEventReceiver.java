@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.BatteryManager;
-import android.util.Log;
 
 import com.luna.powersaver.gp.PowerSaver;
 import com.luna.powersaver.gp.manager.BatteryTimeManager;
@@ -23,7 +22,7 @@ public class BatteryEventReceiver extends BroadcastReceiver {
     public static int sCurrentPlug = -1;
     public static boolean sIsQuickCharge;
 
-    public static final String TAG = "ps-testAddApkDownloadInfo";
+    public static final String TAG = "ps-battery";
 
     private boolean isFirstQuickCharge = true;
     private boolean isFirstContinuousCharge = true;
@@ -65,14 +64,14 @@ public class BatteryEventReceiver extends BroadcastReceiver {
             if (sCurrentPercent > 100)
                 sCurrentPercent = 100;
 
-            Log.d(TAG, "receiver charge change : " + sCurrentPercent + "%");
+            AppDebugLog.d(TAG, "receiver charge change : " + sCurrentPercent + "%");
 
             int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_UNKNOWN);
             SPManager sp = SPManager.get(context);
             int plug = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
             switch (status) {
                 case BatteryManager.BATTERY_STATUS_CHARGING:
-                    Log.d(TAG, "start quick charge");
+                    AppDebugLog.d(TAG, "start quick charge");
                     if (!sIsQuickCharge) {
 
                         sIsQuickCharge = true;
@@ -81,7 +80,7 @@ public class BatteryEventReceiver extends BroadcastReceiver {
                     }
                     break;
                 case BatteryManager.BATTERY_STATUS_FULL:
-                    Log.d(TAG, "start full charge");
+                    AppDebugLog.d(TAG, "start full charge");
                     if (sIsQuickCharge) {
 
                         sIsQuickCharge = false;
@@ -90,7 +89,7 @@ public class BatteryEventReceiver extends BroadcastReceiver {
                     break;
                 case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
                 case BatteryManager.BATTERY_STATUS_DISCHARGING:
-                    Log.d(TAG, "no charging");
+                    AppDebugLog.d(TAG, "no charging");
                     if (sIsQuickCharge) {
                         sIsQuickCharge = false;
                     }
