@@ -30,7 +30,7 @@ import java.util.Locale;
  * @email zsigui@foxmail.com
  * @date 2016/12/26
  */
-@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+@TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class NBAccessibilityService extends SelfDefenceAccessibilityService implements PowerSaver.StateChangeCallback {
 
 
@@ -214,7 +214,7 @@ public class NBAccessibilityService extends SelfDefenceAccessibilityService impl
                 nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getDetailSettingHeaderId());
                 if (nodes != null && nodes.size() > 0) {
                     // 当前处于详情页
-                    info = travsalToFindFirstInfoContainsName(source, "TextView",
+                    info = traverseToFindFirstInfoContainsName(source, "TextView",
                             getResources().getString(R.string.powersaver_detail_setting_title_permission));
                     if (info == null)
                         return;
@@ -347,7 +347,7 @@ public class NBAccessibilityService extends SelfDefenceAccessibilityService impl
                         AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "查找允许安装的源选项");
                         if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
                             AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "开始查找特定含未知源的TextView");
-                            info = travsalToFindFirstInfoContainsName(source, "TextView",
+                            info = traverseToFindFirstInfoContainsName(source, "TextView",
                                     getResources().getString(R.string.powersaver_setting_item_title_unknown_source));
                             if (info == null) {
                                 // 找不到，很可能因为已经在弹窗选项界面
@@ -356,7 +356,7 @@ public class NBAccessibilityService extends SelfDefenceAccessibilityService impl
                                 return;
                             }
                             AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "找到含未知源选项的项，text = " + info.getText());
-                            info = travsalToFindFirstInfoContainsName(info.getParent(), "Switch", null);
+                            info = traverseToFindFirstInfoContainsName(info.getParent(), "Switch", null);
                             if (info == null) {
                                 // 找不到，很可能因为已经在弹窗选项界面
                                 sCurrentWorkState = 3;
@@ -890,24 +890,6 @@ public class NBAccessibilityService extends SelfDefenceAccessibilityService impl
                 StalkerManager.get().doContinueAfterInstalled();
             }
         }
-    }
-
-    private AccessibilityNodeInfo travsalToFindFirstInfoContainsName(AccessibilityNodeInfo info, String widgetName,
-                                                                     String text) {
-        if (info == null)
-            return null;
-        if ((TextUtils.isEmpty(widgetName) || info.getClassName().toString().contains(widgetName))
-                && (TextUtils.isEmpty(text) || (info.getText() != null && info.getText().toString().contains(text)))) {
-            return info;
-        } else if (info.getChildCount() > 0) {
-            AccessibilityNodeInfo result;
-            for (int i = 0; i < info.getChildCount(); i++) {
-                result = travsalToFindFirstInfoContainsName(info.getChild(i), widgetName, text);
-                if (result != null)
-                    return result;
-            }
-        }
-        return null;
     }
 
     private void performGlobalBack() {

@@ -29,6 +29,8 @@ public class AppDebugLog {
     public static final String TAG_PRINT = TAG_PREFIX + "print";
 
     public static final String TAG_ACCESSIBILITY = TAG_PREFIX + "acessibility";
+
+    public static final String TAG_SELF_GUARD = TAG_PREFIX + "selfguard";
     /**
      * 所有注解该TAG的LOG需要进行删除
      */

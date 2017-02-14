@@ -35,8 +35,6 @@ public class WorkActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.clear_data).setOnClickListener(this);
         findViewById(R.id.jump_set_accessibility).setOnClickListener(this);
         findViewById(R.id.wake_guard).setOnClickListener(this);
-        findViewById(R.id.test_part).setOnClickListener(this);
-//        tv = (TextView) findViewById(R.id.note);
     }
 
     @Override
@@ -71,12 +69,6 @@ public class WorkActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.wake_guard:
                 PowerSaver.init(this);
                 PowerSaver.get().showGuardView(this);
-                break;
-            case R.id.test_part:
-//                NBAccessibilityService.sIsInWork = true;
-//                AppUtil.jumpToStore(this);
-//                AppDebugLog.d("main", "isCharging = " + BatteryTimeManager.get().isCharging());
-                StalkerManager.get().judgeAndConstructDefaultInfo(this);
                 break;
         }
     }

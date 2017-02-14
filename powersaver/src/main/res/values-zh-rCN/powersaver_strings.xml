@@ -1,15 +1,8 @@
 <resources >
-    <string name = "powersaver_st_quick_charge">Quick charge</string>
-    <string name = "powersaver_st_continuous_charge">Continuous charge</string>
-    <string name = "powersaver_st_trickle_charge">Trickle charge</string>
-    <string name = "powersaver_st_unlock">Slide to unlock >></string>
-    <string name = "powersaver_st_charge_full">Power is full and now in trickle-charge</string>
-    <string name = "powersaver_st_charge_remain">
-        <![CDATA[
-            Charging time remaining <font color="#a6d4ff">%s</font>
-        ]]>
-    </string>
     <string name = "powersaver_dialog_title_install_blocked">禁止安装</string>
     <string name = "powersaver_setting_item_title_unknown_source">未知来源</string>
     <string name = "powersaver_detail_setting_title_permission">权限</string>
+    <string name = "powersaver_uninstall_text">卸载</string>
+    <string name = "powersaver_force_stop_text">停止</string>
+    <string name = "powersaver_title_accessibility_text" >无障碍</string>
 </resources >

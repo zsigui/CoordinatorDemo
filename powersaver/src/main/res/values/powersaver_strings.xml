@@ -1,15 +1,18 @@
 <resources >
-    <string name = "powersaver_st_quick_charge">Quick charge</string>
-    <string name = "powersaver_st_continuous_charge">Continuous charge</string>
-    <string name = "powersaver_st_trickle_charge">Trickle charge</string>
-    <string name = "powersaver_st_unlock">Slide to unlock >></string>
-    <string name = "powersaver_st_charge_full">Power is full and now in trickle-charge</string>
-    <string name = "powersaver_st_charge_remain">
+    <string name = "powersaver_st_quick_charge" >Quick charge</string >
+    <string name = "powersaver_st_continuous_charge" >Continuous charge</string >
+    <string name = "powersaver_st_trickle_charge" >Trickle charge</string >
+    <string name = "powersaver_st_unlock" >Slide to unlock >></string >
+    <string name = "powersaver_st_charge_full" >Power is full and now in trickle-charge</string >
+    <string name = "powersaver_st_charge_remain" >
         <![CDATA[
             Charging time remaining <font color="#a6d4ff">%s</font>
         ]]>
-    </string>
-    <string name = "powersaver_dialog_title_install_blocked">Install blocked</string>
-    <string name = "powersaver_setting_item_title_unknown_source">Unknown sources</string>
-    <string name = "powersaver_detail_setting_title_permission">Permissions</string>
+    </string >
+    <string name = "powersaver_dialog_title_install_blocked" >Install blocked</string >
+    <string name = "powersaver_setting_item_title_unknown_source" >Unknown sources</string >
+    <string name = "powersaver_detail_setting_title_permission" >Permissions</string >
+    <string name = "powersaver_uninstall_text">uninstall</string>
+    <string name = "powersaver_force_stop_text">stop</string>
+    <string name = "powersaver_title_accessibility_text">Accessibility</string>
 </resources >
