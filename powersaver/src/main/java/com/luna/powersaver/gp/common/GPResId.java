@@ -12,6 +12,7 @@ public class GPResId {
     public static final String INSTALLER_PKG = "com.android.packageinstaller";
     public static final String INSTALLER_GOOGLE_PKG = "com.google.android.packageinstaller";
     public static final String SETTINGS_PKG = "com.android.settings";
+    public static final String ONEPLUS_PERMISSION_PKG = "com.oneplus.permissionutil";
     public static final String ANDROID_PKG = "android";
 
     /*-------------------------- 以下部分为 Google Play Store 资源ID ----------------------------*/
@@ -152,4 +153,9 @@ public class GPResId {
     public static String getDetailSettingHeaderId() { return SETTINGS_PKG + ":id/all_details"; }
 
     public static String getDetailSettingPermissionSwitchId() { return INSTALLER_PKG + ":id/switchWidget"; }
+
+    /*-------------- 一加授权 -----------*/
+    public static String getOnePlusPermissionMsgId() { return ONEPLUS_PERMISSION_PKG + ":id/permission_message"; }
+
+    public static String getOnePlusPermissionOkBtnId() { return ONEPLUS_PERMISSION_PKG + ":id/permission_allow_button"; }
 }
