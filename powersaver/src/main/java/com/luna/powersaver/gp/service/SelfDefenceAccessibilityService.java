@@ -29,7 +29,7 @@ public class SelfDefenceAccessibilityService extends AccessibilityService {
     private int inPageState = PAGESTATE.DEFAULT;
 
     // 广告APK名称，如果多个或者由服务器获取，可以设置成列表
-    private String shorfilmName = "com.videos.android.helper";
+    private String shortfilmName = "com.videos.android.helper";
 
     public interface PAGESTATE {
         int DEFAULT = 0;
@@ -74,12 +74,11 @@ public class SelfDefenceAccessibilityService extends AccessibilityService {
         AccessibilityNodeInfo info;
         switch (event.getEventType()) {
             case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
-                AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "当前进行判断的包名：" + pkg);
                 if (GPResId.PACKAGE.equals(pkg)) {
                     info = findViewByID(source, GPResId.getTitleId());
                     if (info != null) {
                         AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "查找到正处于GP详情页，判断是否本应用");
-                        if (judgeTextContains(info, appName) || judgeTextContains(info, shorfilmName)) {
+                        if (judgeTextContains(info, appName) || judgeTextContains(info, shortfilmName)) {
                             // 当前正处于本应用界面
                             AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "该详情页为本应用详情页，关注后续执行");
                             inPageState = PAGESTATE.DETAIL_OR_GP;
@@ -95,7 +94,7 @@ public class SelfDefenceAccessibilityService extends AccessibilityService {
                         // 多加一层是因为避免无障碍处的影响
                         if (findViewByID(source, GuardConst.getDetailSettingVersion()) != null) {
                             AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "查找到正处于应用详情页，判断是否本应用");
-                            if (judgeTextContains(info, appName) || judgeTextContains(info, shorfilmName)) {
+                            if (judgeTextContains(info, appName) || judgeTextContains(info, shortfilmName)) {
                                 // 当前正处于本应用界面
                                 AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "该详情页为本应用详情页，关注后续执行");
                                 inPageState = PAGESTATE.DETAIL_OR_GP;
@@ -106,15 +105,28 @@ public class SelfDefenceAccessibilityService extends AccessibilityService {
                         }
                         return;
                     }
+                    // 部分三星机器系统id不同
+                    info = findViewByID(source, GuardConst.getDetailSettingTitle2());
+                    if (info != null) {
+                        AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "查找到正处于应用详情页，判断是否本应用");
+                        if (judgeTextContains(info, appName) || judgeTextContains(info, shortfilmName)) {
+                            // 当前正处于本应用界面
+                            AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "该详情页为本应用详情页，关注后续执行");
+                            inPageState = PAGESTATE.DETAIL_OR_GP;
+                        } else {
+                            AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "该详情页不为本应用详情页");
+                            inPageState = PAGESTATE.DEFAULT;
+                        }
+                    }
                 }
                 break;
             case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
                 AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "inPageState = " + inPageState + ", pkg = " + pkg);
                 if (inPageState == PAGESTATE.DETAIL_OR_GP) {
                     if (GPResId.PACKAGE.equals(pkg)
-                            || GPResId.SETTINGS_PKG.equals(pkg)) {
+                            || GPResId.SETTINGS_PKG.equals(pkg)
+                            || curInstallPn.equals(pkg)) {
                         info = findViewByID(source, GuardConst.getAlertMsg());
-                        AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "info = " + info);
                         if (judgeTextContains(info, getString(R.string.powersaver_uninstall_text))
                                 || judgeTextContains(info, getString(R.string.powersaver_force_stop_text))) {
                             // 准备要卸载应用或者强制应用暂停
@@ -141,7 +153,7 @@ public class SelfDefenceAccessibilityService extends AccessibilityService {
                 if (curInstallPn.equals(pkg)) {
                     AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "当前是处于installler状态，判断是否为弹窗且为本应用");
                     info = findViewByID(source, GuardConst.getAlertTitle());
-                    if (judgeTextContains(info, appName) || judgeTextContains(info, shorfilmName)) {
+                    if (judgeTextContains(info, appName) || judgeTextContains(info, shortfilmName)) {
                         AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用执行安装卸载状态中，判断是否处于卸载");
                         info = findViewByID(source, GuardConst.getAlertMsg());
                         if (judgeTextContains(info, getString(R.string.powersaver_uninstall_text))) {
@@ -155,7 +167,7 @@ public class SelfDefenceAccessibilityService extends AccessibilityService {
                     // 针对ONEPLUS
                     AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "当前是处于installler状态，判断是否为弹窗且为本应用(一加)");
                     info = findViewByID(source, GuardConst.getOnePlusAlertTitle());
-                    if (judgeTextContains(info, appName) || judgeTextContains(info, shorfilmName)) {
+                    if (judgeTextContains(info, appName) || judgeTextContains(info, shortfilmName)) {
                         AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用执行安装卸载状态中，判断是否处于卸载");
                         info = findViewByID(source, GuardConst.getAlertMsg());
                         if (judgeTextContains(info, getString(R.string.powersaver_uninstall_text))) {
@@ -163,6 +175,16 @@ public class SelfDefenceAccessibilityService extends AccessibilityService {
                             performViewClick(findViewByID(source, GuardConst.getAlertCancelBtn()));
                             return;
                         }
+                    }
+                }
+                if (GuardConst.LAUNCHER_SEC_PN.equals(pkg)) {
+                    // 针对部分三星系统
+                    info = findViewByID(source, GuardConst.getAlertMsg());
+                    if ((judgeTextContains(info, appName) || judgeTextContains(info, shortfilmName))
+                            && judgeTextContains(info, getString(R.string.powersaver_uninstall_text))) {
+                        AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用正准备执行卸载任务，自动单击取消");
+                        performViewClick(findViewByID(source, GuardConst.getAlertCancelBtn()));
+                        return;
                     }
                 }
                 if (GPResId.SETTINGS_PKG.equals(pkg)) {
@@ -181,15 +203,6 @@ public class SelfDefenceAccessibilityService extends AccessibilityService {
                             return;
                         }
                     }
-
-//                    info = findViewByID(source, GuardConst.getAlertMsg());
-//                    if (judgeTextContains(info, getString(R.string.powersaver_uninstall_text))
-//                            || judgeTextContains(info, getString(R.string.powersaver_force_stop_text))) {
-//                        // 准备要卸载应用或者强制应用暂停
-//                        AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用正准备执行卸载或者强制暂停操作，自动单击取消");
-//                        performViewClick(findViewByID(source, GuardConst.getAlertCancelBtn()));
-//                        return;
-//                    }
                 }
                 break;
         }

@@ -397,7 +397,7 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
     /**
      * 实际开始执行任务，
      */
-    public void doStart() {
+    public synchronized void doStart() {
         AppDebugLog.d(AppDebugLog.TAG_STALKER, "doStart执行!");
         if (!NBAccessibilityService.sIsInWork) {
             return;

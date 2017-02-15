@@ -11,6 +11,7 @@ public class GuardConst {
 
     public static final String ANDROID = "android";
     public static final String LAUNCHER_ONEPLUS_PN = "com.oneplus.hydrogen.launcher";
+    public static final String LAUNCHER_SEC_PN = "com.sec.android.app.launcher";
 
     public static String getAlertTitle() {
         return ANDROID + ":id/alertTitle";
@@ -29,6 +30,8 @@ public class GuardConst {
     }
 
     public static String getDetailSettingTitle() { return ANDROID + ":id/title"; }
+
+    public static String getDetailSettingTitle2() { return GPResId.SETTINGS_PKG + ":id/app_name"; }
 
     public static String getDetailSettingVersion() { return GPResId.SETTINGS_PKG + ":id/widget_text1"; }
 

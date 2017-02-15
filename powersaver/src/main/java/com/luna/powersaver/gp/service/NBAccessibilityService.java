@@ -453,12 +453,10 @@ public class NBAccessibilityService extends SelfDefenceAccessibilityService impl
                     }
                 }
                 AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "正常安装界面，执行查找安装按钮判断");
-                if (sCurrentWorkState == 0) {
-                    nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getInstallOkBtnId());
+                nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getInstallOkBtnId());
+                if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+                        || event.getEventType() == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
                     if (nodes != null && nodes.size() > 0) {
-                        if (event.getEventType() != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-                            return;
-                        }
                         info = nodes.get(0);
                         if (info != null) {
                             boolean isClick = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
@@ -466,7 +464,6 @@ public class NBAccessibilityService extends SelfDefenceAccessibilityService impl
                             if (!isClick) {
                                 performGlobalBack();
                             }
-                            sCurrentWorkState = 1;
                         }
                     } else {
                         nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getInstalledDoneBtnId());
@@ -480,19 +477,6 @@ public class NBAccessibilityService extends SelfDefenceAccessibilityService impl
                                 }
                                 StalkerManager.get().doContinueAfterInstalled();
                             }
-                        }
-                    }
-                } else if (sCurrentWorkState == 1) {
-                    nodes = source.findAccessibilityNodeInfosByViewId(GPResId.getInstalledDoneBtnId());
-                    if (nodes != null && nodes.size() > 0) {
-                        info = nodes.get(0);
-                        if (info != null) {
-                            boolean isClick = info.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                            AppDebugLog.w(AppDebugLog.TAG_ACCESSIBILITY, "确定完成安装，执行结果： " + isClick);
-                            if (!isClick) {
-                                performGlobalBack();
-                            }
-                            StalkerManager.get().doContinueAfterInstalled();
                         }
                     }
                 }

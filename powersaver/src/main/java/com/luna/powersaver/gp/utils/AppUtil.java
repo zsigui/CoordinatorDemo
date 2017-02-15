@@ -108,6 +108,7 @@ public class AppUtil {
 
     /**
      * 调用系统的安装服务安装特定应用
+     *
      * @param context
      * @param destFile 指定待安装APK
      */
@@ -145,6 +146,7 @@ public class AppUtil {
 
     /**
      * 判断特定应用是否被安装
+     *
      * @param context
      * @param pkgName 指定应用的包名
      * @return
@@ -188,6 +190,7 @@ public class AppUtil {
 
     /**
      * 安装指定的APK文件
+     *
      * @param context
      * @param filePath APK文件所在的位置路径
      */
@@ -207,6 +210,7 @@ public class AppUtil {
 
     /**
      * 卸载指定应用
+     *
      * @param context
      * @param pkgName 指定应用的包名
      */
@@ -227,11 +231,11 @@ public class AppUtil {
      * 执行根据应用信息打开APP的操作
      *
      * @param context
-     * @param info 要操作的应用信息
+     * @param info    要操作的应用信息
      */
     public static void jumpToApp(Context context, JsonAppInfo info) {
         AppDebugLog.d(AppDebugLog.TAG_STALKER, "执行跳转APP任务");
-        if (context == null || info == null)
+        if (context == null || info == null || TextUtils.isEmpty(info.pkg))
             return;
         if (TextUtils.isEmpty(info.uri)) {
             jumpToApp(context, info.pkg);
@@ -265,17 +269,22 @@ public class AppUtil {
      * 直接打开特定的应用
      *
      * @param context
-     * @param pkg 要打开的应用包名
+     * @param pkg     要打开的应用包名
      */
     private static void jumpToApp(Context context, String pkg) {
-        AppDebugLog.d(AppDebugLog.TAG_STALKER, "默认跳转APP方式");
+        AppDebugLog.d(AppDebugLog.TAG_UTIL, "默认跳转APP方式");
         Intent intent = context.getPackageManager().getLaunchIntentForPackage(pkg);
+        if (intent == null) {
+            AppDebugLog.d(AppDebugLog.TAG_UTIL, "没有安装要跳转的APP");
+            return;
+        }
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
     }
 
     /**
      * 跳转到手机的主界面，类似虚拟按钮“HOME”效果
+     *
      * @param context
      */
     public static void jumpToHome(Context context) {
@@ -287,8 +296,9 @@ public class AppUtil {
 
     /**
      * 判断指定应用是否处于前台位置
+     *
      * @param context
-     * @param pkg 指定应用的包名
+     * @param pkg     指定应用的包名
      * @return
      */
     public static boolean isPkgForeground(Context context, String pkg) {
@@ -316,8 +326,10 @@ public class AppUtil {
      * 判断应用是否具有所需的所有权限
      */
     public static boolean hasAllPermissions(Context context) {
-        return context.checkCallingOrSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-                && context.checkCallingOrSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED;
+        return context.checkCallingOrSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager
+                .PERMISSION_GRANTED
+                && context.checkCallingOrSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager
+                .PERMISSION_GRANTED;
     }
 
     /**
@@ -326,7 +338,8 @@ public class AppUtil {
     public static boolean isAccessibleEnabled(Context context) {
         List<AccessibilityServiceInfo> infos = ((AccessibilityManager) context.getSystemService(ACCESSIBILITY_SERVICE))
                 .getEnabledAccessibilityServiceList(-1);
-        final String service = context.getPackageName() + "/" + BuildConfig.APPLICATION_ID + ".service.NBAccessibilityService";
+        final String service = context.getPackageName() + "/" + BuildConfig.APPLICATION_ID + ".service" +
+                ".NBAccessibilityService";
         for (AccessibilityServiceInfo info : infos) {
             if (info.getId().equals(service)) {
                 return true;
