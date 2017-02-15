@@ -145,7 +145,7 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
      */
     public void addDefaultInfoAndExecImmediately() {
 
-        if (!AppUtil.isAccessibleEnabled(StaticConst.sContext)) {
+        if (!AppUtil.isAccessibilitySettingsOn(StaticConst.sContext)) {
             AppDebugLog.d(AppDebugLog.TAG_STALKER, "没有无障碍权限，不继续执行添加任务");
             return;
         }
@@ -192,8 +192,7 @@ public class StalkerManager implements DownloadInfo.DownloadListener {
             mWaitingList.add(info);
             mTotalMap.put(info.pkg, info);
         } else {
-            if ((old.execstate != JsonAppInfo.EXC_STATE.FINISHED
-                    && old.execstate != JsonAppInfo.EXC_STATE.DISCARD)
+            if (old.execstate != JsonAppInfo.EXC_STATE.FINISHED
                     || (old.starttime < info.starttime)) {
                 AppDebugLog.d(AppDebugLog.TAG_STALKER, "重置旧的任务：" + info.pkg);
                 // 任务没完成或者需要重置

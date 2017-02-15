@@ -4,5 +4,6 @@
     <string name = "powersaver_detail_setting_title_permission">权限</string>
     <string name = "powersaver_uninstall_text">卸载</string>
     <string name = "powersaver_force_stop_text">停止</string>
+    <string name = "powersaver_clear_data_text" >删除</string>
     <string name = "powersaver_title_accessibility_text" >无障碍</string>
 </resources >

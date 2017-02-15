@@ -1,6 +1,5 @@
 package com.luna.powersaver.gp.service;
 
-import android.accessibilityservice.AccessibilityService;
 import android.annotation.TargetApi;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -356,12 +355,16 @@ public class NBAccessibilityService extends SelfDefenceAccessibilityService impl
                                 return;
                             }
                             AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "找到含未知源选项的项，text = " + info.getText());
-                            info = traverseToFindFirstInfoContainsName(info.getParent(), "Switch", null);
+                            AccessibilityNodeInfo tmp = info.getParent();
+                            info = traverseToFindFirstInfoContainsName(tmp, "Switch", null);
                             if (info == null) {
-                                // 找不到，很可能因为已经在弹窗选项界面
-                                sCurrentWorkState = 3;
-                                handleInstallWork(event);
-                                return;
+                                info = traverseToFindFirstInfoContainsName(tmp, "CheckBox", null);
+                                if (info == null) {
+                                    // 找不到，很可能因为已经在弹窗选项界面
+                                    sCurrentWorkState = 3;
+                                    handleInstallWork(event);
+                                    return;
+                                }
                             }
                             AppDebugLog.d(AppDebugLog.TAG_ACCESSIBILITY, "查找到切换器为: " + info.getClassName());
                             if (!info.isChecked()) {
@@ -414,8 +417,8 @@ public class NBAccessibilityService extends SelfDefenceAccessibilityService impl
                         }
                     }
                 }
+                return;
             }
-            return;
         }
         if (GPResId.INSTALLER_PKG.equals(pkg)
                 || GPResId.INSTALLER_GOOGLE_PKG.equals(pkg)) {
@@ -880,7 +883,7 @@ public class NBAccessibilityService extends SelfDefenceAccessibilityService impl
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
+                performGlobalBackIm();
             }
         }, 200);
     }

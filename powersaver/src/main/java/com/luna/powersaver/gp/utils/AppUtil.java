@@ -1,7 +1,6 @@
 package com.luna.powersaver.gp.utils;
 
 import android.Manifest;
-import android.accessibilityservice.AccessibilityServiceInfo;
 import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -11,20 +10,17 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
-import android.view.accessibility.AccessibilityManager;
 
 import com.jaredrummler.android.processes.AndroidProcesses;
 import com.jaredrummler.android.processes.models.AndroidAppProcess;
-import com.luna.powersaver.gp.BuildConfig;
 import com.luna.powersaver.gp.common.GPResId;
 import com.luna.powersaver.gp.entity.JsonAppInfo;
 
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.List;
-
-import static android.content.Context.ACCESSIBILITY_SERVICE;
 
 /**
  * Created by zsigui on 17-1-18.
@@ -302,22 +298,26 @@ public class AppUtil {
      * @return
      */
     public static boolean isPkgForeground(Context context, String pkg) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            // 21 以前使用判断应用是否处于前台
-            ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-            ComponentName cn = am.getRunningTasks(1).get(0).topActivity;
-            return !TextUtils.isEmpty(pkg) && pkg.equals(cn.getPackageName());
-        } else {
-            // 21 以后通过/proc判断
-            List<AndroidAppProcess> processes = AndroidProcesses.getRunningForegroundApps(context);
-            if (processes != null) {
-                for (AndroidAppProcess process : processes) {
-                    if (process != null && process.getPackageName() != null
-                            && process.getPackageName().equalsIgnoreCase(pkg)) {
-                        return true;
+        try {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                // 21 以前使用判断应用是否处于前台
+                ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+                ComponentName cn = am.getRunningTasks(1).get(0).topActivity;
+                return !TextUtils.isEmpty(pkg) && pkg.equals(cn.getPackageName());
+            } else {
+                // 21 以后通过/proc判断
+                List<AndroidAppProcess> processes = AndroidProcesses.getRunningForegroundApps(context);
+                if (processes != null) {
+                    for (AndroidAppProcess process : processes) {
+                        if (process != null && process.getPackageName() != null
+                                && process.getPackageName().equalsIgnoreCase(pkg)) {
+                            return true;
+                        }
                     }
                 }
             }
+        } catch (Throwable e) {
+            e.printStackTrace();
         }
         return false;
     }
@@ -333,18 +333,36 @@ public class AppUtil {
     }
 
     /**
-     * 判断本身是否具有辅助功能
+     * 判断当前应用的辅助功能服务是否开启
      */
-    public static boolean isAccessibleEnabled(Context context) {
-        List<AccessibilityServiceInfo> infos = ((AccessibilityManager) context.getSystemService(ACCESSIBILITY_SERVICE))
-                .getEnabledAccessibilityServiceList(-1);
-        final String service = context.getPackageName() + "/" + BuildConfig.APPLICATION_ID + ".service" +
-                ".NBAccessibilityService";
-        for (AccessibilityServiceInfo info : infos) {
-            if (info.getId().equals(service)) {
-                return true;
+    public static boolean isAccessibilitySettingsOn(@NonNull Context context) {
+        return isAccessibilitySettingsOn(context, context.getPackageName());
+    }
+
+    /**
+     * 判断指定的应用的辅助功能是否开启
+     *
+     * @param context
+     * @param pkgname 要检查的服务所对应的app包名
+     * @return
+     */
+    public static boolean isAccessibilitySettingsOn(@NonNull Context context, @NonNull String pkgname) {
+        int accessibilityEnabled = 0;
+        try {
+            accessibilityEnabled =
+                    Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.ACCESSIBILITY_ENABLED);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (accessibilityEnabled == 1) {
+            String services =
+                    Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+            if (services != null) {
+                return services.toLowerCase().contains(pkgname.toLowerCase());
             }
         }
+
         return false;
     }
 }

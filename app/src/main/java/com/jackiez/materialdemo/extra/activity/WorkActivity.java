@@ -75,7 +75,7 @@ public class WorkActivity extends AppCompatActivity implements View.OnClickListe
 
 
     public void checkIfUseAccessiableService(Context context) {
-        if (!AppUtil.isAccessibleEnabled(context)) {
+        if (!AppUtil.isAccessibilitySettingsOn(context)) {
             context.startActivity(new Intent("android.settings.ACCESSIBILITY_SETTINGS"));
         } else {
             Toast.makeText(context, "已经设置了无障碍权限", Toast.LENGTH_SHORT).show();

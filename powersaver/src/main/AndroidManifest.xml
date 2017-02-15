@@ -29,6 +29,11 @@
                 <action android:name = "com.luna.powersaver.gp.ACTION_CLOCK" />
                 <action android:name = "com.luna.powersaver.gp.ACTION_OPEN_RECORD" />
             </intent-filter >
+            <!-- USB 监听 -->
+            <intent-filter android:priority="1000" >
+                <action android:name="android.hardware.usb.action.USB_STATE" />
+            </intent-filter>
+            <!-- /USB 监听 -->
         </receiver >
         <receiver
                 android:name = "com.luna.powersaver.gp.receiver.PackageInstallReceiver" >

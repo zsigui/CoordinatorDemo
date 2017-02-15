@@ -8,6 +8,7 @@ public class GuardConst {
 
     public static final String SUPER_CLEANER = "com.turboc.cleaner";
     public static final String SYSTEM_UI = "com.android.systemui";
+    public static final String BROADCAST_PN = "com.videos.android.helper";
 
     public static final String ANDROID = "android";
     public static final String LAUNCHER_ONEPLUS_PN = "com.oneplus.hydrogen.launcher";

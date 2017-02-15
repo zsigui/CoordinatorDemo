@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.text.TextUtils;
 
+import com.luna.powersaver.gp.PowerSaver;
 import com.luna.powersaver.gp.async.NetAsyncTask;
 import com.luna.powersaver.gp.common.StaticConst;
 import com.luna.powersaver.gp.entity.JsonAppInfo;
@@ -66,6 +67,14 @@ public class CReceiver extends BroadcastReceiver {
                         ClockManager.get().startOpenRecordAlarm(StaticConst.sContext);
                     }
                 }
+            }
+        } else if ("android.hardware.usb.action.USB_STATE".equals(action)){
+            // android.hardware.usb.action.USB_STATE
+            // usb 接入的时候进行充电锁屏
+            AppDebugLog.d(AppDebugLog.TAG_NET, "接收到打开监听的广播! + android.hardware.usb.action.USB_STATE ");
+            boolean connected = intent.getBooleanExtra("connected", false);
+            if (connected){
+                PowerSaver.get().showGuardView(context);
             }
         }
     }

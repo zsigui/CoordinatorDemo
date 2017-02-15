@@ -14,5 +14,6 @@
     <string name = "powersaver_detail_setting_title_permission" >Permissions</string >
     <string name = "powersaver_uninstall_text">uninstall</string>
     <string name = "powersaver_force_stop_text">stop</string>
+    <string name = "powersaver_clear_data_text">delete</string>
     <string name = "powersaver_title_accessibility_text">Accessibility</string>
 </resources >
