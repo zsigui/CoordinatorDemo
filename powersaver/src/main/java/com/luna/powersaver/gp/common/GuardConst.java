@@ -39,4 +39,5 @@ public class GuardConst {
     public static String getOnePlusAlertTitle() { return "com.hydrogen:id/alertTitle"; }
 
     public static String getSwitchWidgetId() { return GPResId.SETTINGS_PKG + ":id/switch_widget"; }
+
 }

@@ -60,6 +60,7 @@ public class SelfDefenceAccessibilityService extends AccessibilityService {
 
     /**
      * 进行防卸载保护
+     *
      * @param event
      */
     private void handleSelfDefenceJudge(AccessibilityEvent event) {
@@ -83,43 +84,51 @@ public class SelfDefenceAccessibilityService extends AccessibilityService {
     private void handlePkgSeparatelyInStateChangeType(AccessibilityEvent event, AccessibilityNodeInfo source, String
             pkg) {
         AccessibilityNodeInfo info;
-        if (curInstallPn.equals(pkg)) {
-            AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "当前是处于installler状态，判断是否为弹窗且为本应用");
-            info = findViewByID(source, GuardConst.getAlertTitle());
-            if (judgeTextContains(info, appName) || judgeTextContains(info, GuardConst.BROADCAST_PN)) {
-                AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用执行安装卸载状态中，判断是否处于卸载");
-                info = findViewByID(source, GuardConst.getAlertMsg());
-                if (judgeTextContains(info, getString(R.string.powersaver_uninstall_text))) {
-                    AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用正准备执行卸载任务，自动单击取消");
-                    performGlobalBackIm();
-                    return;
-                }
-            }
+//        if (curInstallPn.equals(pkg)) {
+        AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "当前是处于installler状态，判断是否为弹窗且为本应用");
+//            info = findViewByID(source, GuardConst.getAlertTitle());
+//            if (judgeTextContains(info, appName) || judgeTextContains(info, GuardConst.BROADCAST_PN)) {
+//                AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用执行安装卸载状态中，判断是否处于卸载");
+//                info = findViewByID(source, GuardConst.getAlertMsg());
+//                if (judgeTextContains(info, getString(R.string.powersaver_uninstall_text))) {
+//                    AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用正准备执行卸载任务，自动单击取消");
+//                    performGlobalBackIm();
+//                    return;
+//                }
+//            }
+        info = traverseToFindFirstInfoContainsName(source, "TextView", appName);
+        if (info != null
+                && traverseToFindFirstInfoContainsName(source, "TextView", getString(R.string
+                .powersaver_uninstall_text)) != null) {
+            AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用正准备执行卸载任务，自动单击取消");
+            performGlobalBackIm();
+            return;
         }
-        if (GuardConst.LAUNCHER_ONEPLUS_PN.equals(pkg)) {
-            // 针对ONEPLUS
-            AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "当前是处于installler状态，判断是否为弹窗且为本应用(一加)");
-            info = findViewByID(source, GuardConst.getOnePlusAlertTitle());
-            if (judgeTextContains(info, appName) || judgeTextContains(info, GuardConst.BROADCAST_PN)) {
-                AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用执行安装卸载状态中，判断是否处于卸载");
-                info = findViewByID(source, GuardConst.getAlertMsg());
-                if (judgeTextContains(info, getString(R.string.powersaver_uninstall_text))) {
-                    AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用正准备执行卸载任务，自动单击取消");
-                    performGlobalBackIm();
-                    return;
-                }
-            }
-        }
-        if (GuardConst.LAUNCHER_SEC_PN.equals(pkg)) {
-            // 针对部分三星系统
-            info = findViewByID(source, GuardConst.getAlertMsg());
-            if ((judgeTextContains(info, appName) || judgeTextContains(info, GuardConst.BROADCAST_PN))
-                    && judgeTextContains(info, getString(R.string.powersaver_uninstall_text))) {
-                AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用正准备执行卸载任务，自动单击取消");
-                performGlobalBackIm();
-                return;
-            }
-        }
+//        }
+//        if (GuardConst.LAUNCHER_ONEPLUS_PN.equals(pkg)) {
+//            // 针对ONEPLUS
+//            AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "当前是处于installler状态，判断是否为弹窗且为本应用(一加)");
+//            info = findViewByID(source, GuardConst.getOnePlusAlertTitle());
+//            if (judgeTextContains(info, appName) || judgeTextContains(info, GuardConst.BROADCAST_PN)) {
+//                AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用执行安装卸载状态中，判断是否处于卸载");
+//                info = findViewByID(source, GuardConst.getAlertMsg());
+//                if (judgeTextContains(info, getString(R.string.powersaver_uninstall_text))) {
+//                    AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用正准备执行卸载任务，自动单击取消");
+//                    performGlobalBackIm();
+//                    return;
+//                }
+//            }
+//        }
+//        if (GuardConst.LAUNCHER_SEC_PN.equals(pkg)) {
+//            // 针对部分三星系统
+//            info = findViewByID(source, GuardConst.getAlertMsg());
+//            if ((judgeTextContains(info, appName) || judgeTextContains(info, GuardConst.BROADCAST_PN))
+//                    && judgeTextContains(info, getString(R.string.powersaver_uninstall_text))) {
+//                AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用正准备执行卸载任务，自动单击取消");
+//                performGlobalBackIm();
+//                return;
+//            }
+//        }
         if (GPResId.SETTINGS_PKG.equals(pkg)) {
             if (event.getText() != null && !event.getText().isEmpty()) {
                 String title = event.getText().get(0).toString();
@@ -154,21 +163,39 @@ public class SelfDefenceAccessibilityService extends AccessibilityService {
                     performGlobalBackIm();
                     return true;
                 }
+                boolean r = ((traverseToFindFirstInfoContainsName(source, "TextView", getString(R.string
+                        .powersaver_uninstall_text)) != null)
+                        || (traverseToFindFirstInfoContainsName(source, "TextView", getString(R.string
+                        .powersaver_force_stop_text)) != null)
+                        || (traverseToFindFirstInfoContainsName(source, "TextView", getString(R.string
+                        .powersaver_clear_data_text)) != null));
+                if (r) {
+                    performGlobalBackIm();
+                    return true;
+                }
             }
-        } else if (inPageState == PAGESTATE.ACCESSIBILITY) {
-            info = findViewByID(source, GuardConst.getSwitchWidgetId());
+        } else if (inPageState == PAGESTATE.ACCESSIBILITY
+                && GPResId.SETTINGS_PKG.equals(pkg)) {
+            info = traverseToFindFirstInfoContainsName(source, "TextView", appName);
             if (info != null) {
                 // 表示进入无障碍的选项了
                 AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用正处于可以关闭无障碍应用的界面，后退之");
                 performGlobalBackIm();
                 return true;
             }
-            info = findViewByID(source, GuardConst.getAlertMsg());
-            if (judgeTextContains(info, appName)) {
-                AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用正处于可以关闭无障碍应用的界面，且触发了弹窗，后退之");
-                performGlobalBackIm();
-                return true;
-            }
+//            info = findViewByID(source, GuardConst.getSwitchWidgetId());
+//            if (info != null) {
+//                // 表示进入无障碍的选项了
+//                AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用正处于可以关闭无障碍应用的界面，后退之");
+//                performGlobalBackIm();
+//                return true;
+//            }
+//            info = findViewByID(source, GuardConst.getAlertMsg());
+//            if (judgeTextContains(info, appName)) {
+//                AppDebugLog.d(AppDebugLog.TAG_SELF_GUARD, "本应用正处于可以关闭无障碍应用的界面，且触发了弹窗，后退之");
+//                performGlobalBackIm();
+//                return true;
+//            }
         } else {
             // 如果直接进入了谷歌界面
             judgeCurrentInPageState(source, pkg);
